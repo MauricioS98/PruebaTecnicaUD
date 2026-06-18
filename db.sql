@@ -120,4 +120,318 @@ CREATE INDEX idx_composer_id_user ON composer (id_user);
 CREATE INDEX idx_director_id_user ON director (id_user);
 CREATE INDEX idx_artist_id_user ON artist (id_user);
 
+-- ---------------------------------------------------------------------------
+-- Auditoría (general + una tabla por entidad)
+-- Los triggers corren en la MISMA transacción que el DML: si falla el insert
+-- en auditoría, PostgreSQL revierte también el cambio en la tabla origen.
+-- Desde la app, usar BEGIN explícito y registrar el usuario con:
+--   SELECT audit.set_changed_by('id_user o email');
+-- ---------------------------------------------------------------------------
+
+CREATE SCHEMA audit;
+
+CREATE TABLE audit.log (
+    id_audit     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    table_name   TEXT NOT NULL,
+    record_id    TEXT NOT NULL,
+    operation    CHAR(1) NOT NULL,
+    old_data     JSONB,
+    new_data     JSONB,
+    changed_by   TEXT NOT NULL,
+    changed_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_audit_log_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE INDEX idx_audit_log_table_name ON audit.log (table_name);
+CREATE INDEX idx_audit_log_record_id ON audit.log (table_name, record_id);
+CREATE INDEX idx_audit_log_changed_at ON audit.log (changed_at);
+CREATE INDEX idx_audit_log_changed_by ON audit.log (changed_by);
+
+CREATE TABLE audit.user_app_audit (
+    id_audit   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_user    INTEGER NOT NULL,
+    operation  CHAR(1) NOT NULL,
+    old_data   JSONB,
+    new_data   JSONB,
+    changed_by TEXT NOT NULL,
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_user_app_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE TABLE audit.composer_audit (
+    id_audit    BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_composer INTEGER NOT NULL,
+    operation   CHAR(1) NOT NULL,
+    old_data    JSONB,
+    new_data    JSONB,
+    changed_by  TEXT NOT NULL,
+    changed_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_composer_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE TABLE audit.work_audit (
+    id_audit   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_work    INTEGER NOT NULL,
+    operation  CHAR(1) NOT NULL,
+    old_data   JSONB,
+    new_data   JSONB,
+    changed_by TEXT NOT NULL,
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_work_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE TABLE audit.composition_audit (
+    id_audit       BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_composition INTEGER NOT NULL,
+    operation      CHAR(1) NOT NULL,
+    old_data       JSONB,
+    new_data       JSONB,
+    changed_by     TEXT NOT NULL,
+    changed_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_composition_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE TABLE audit.genre_audit (
+    id_audit   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_genre   INTEGER NOT NULL,
+    operation  CHAR(1) NOT NULL,
+    old_data   JSONB,
+    new_data   JSONB,
+    changed_by TEXT NOT NULL,
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_genre_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE TABLE audit.work_genre_audit (
+    id_audit      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_work_genre INTEGER NOT NULL,
+    operation     CHAR(1) NOT NULL,
+    old_data      JSONB,
+    new_data      JSONB,
+    changed_by    TEXT NOT NULL,
+    changed_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_work_genre_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE TABLE audit.director_audit (
+    id_audit    BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_director INTEGER NOT NULL,
+    operation   CHAR(1) NOT NULL,
+    old_data    JSONB,
+    new_data    JSONB,
+    changed_by  TEXT NOT NULL,
+    changed_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_director_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE TABLE audit.artist_audit (
+    id_audit   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_artist  INTEGER NOT NULL,
+    operation  CHAR(1) NOT NULL,
+    old_data   JSONB,
+    new_data   JSONB,
+    changed_by TEXT NOT NULL,
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_artist_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE TABLE audit.type_instrument_audit (
+    id_audit           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_type_instrument INTEGER NOT NULL,
+    operation          CHAR(1) NOT NULL,
+    old_data           JSONB,
+    new_data           JSONB,
+    changed_by         TEXT NOT NULL,
+    changed_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_type_instrument_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE TABLE audit.instrument_audit (
+    id_audit      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_instrument INTEGER NOT NULL,
+    operation     CHAR(1) NOT NULL,
+    old_data      JSONB,
+    new_data      JSONB,
+    changed_by    TEXT NOT NULL,
+    changed_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_instrument_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE TABLE audit.type_interpretation_audit (
+    id_audit               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_type_interpretation INTEGER NOT NULL,
+    operation              CHAR(1) NOT NULL,
+    old_data               JSONB,
+    new_data               JSONB,
+    changed_by             TEXT NOT NULL,
+    changed_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_type_interpretation_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE TABLE audit.interpretation_audit (
+    id_audit          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_interpretation INTEGER NOT NULL,
+    operation         CHAR(1) NOT NULL,
+    old_data          JSONB,
+    new_data          JSONB,
+    changed_by        TEXT NOT NULL,
+    changed_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_interpretation_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE TABLE audit.interpretation_artist_audit (
+    id_audit                 BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_interpretation_artist INTEGER NOT NULL,
+    operation                CHAR(1) NOT NULL,
+    old_data                 JSONB,
+    new_data                 JSONB,
+    changed_by               TEXT NOT NULL,
+    changed_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_interpretation_artist_audit_operation CHECK (operation IN ('C', 'U', 'D'))
+);
+
+CREATE INDEX idx_user_app_audit_id_user ON audit.user_app_audit (id_user);
+CREATE INDEX idx_composer_audit_id_composer ON audit.composer_audit (id_composer);
+CREATE INDEX idx_work_audit_id_work ON audit.work_audit (id_work);
+CREATE INDEX idx_composition_audit_id_composition ON audit.composition_audit (id_composition);
+CREATE INDEX idx_genre_audit_id_genre ON audit.genre_audit (id_genre);
+CREATE INDEX idx_work_genre_audit_id_work_genre ON audit.work_genre_audit (id_work_genre);
+CREATE INDEX idx_director_audit_id_director ON audit.director_audit (id_director);
+CREATE INDEX idx_artist_audit_id_artist ON audit.artist_audit (id_artist);
+CREATE INDEX idx_type_instrument_audit_id_type_instrument ON audit.type_instrument_audit (id_type_instrument);
+CREATE INDEX idx_instrument_audit_id_instrument ON audit.instrument_audit (id_instrument);
+CREATE INDEX idx_type_interpretation_audit_id_type_interpretation ON audit.type_interpretation_audit (id_type_interpretation);
+CREATE INDEX idx_interpretation_audit_id_interpretation ON audit.interpretation_audit (id_interpretation);
+CREATE INDEX idx_interpretation_artist_audit_id_interpretation_artist ON audit.interpretation_artist_audit (id_interpretation_artist);
+
+CREATE OR REPLACE FUNCTION audit.set_changed_by(p_user TEXT)
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_user IS NULL OR btrim(p_user) = '' THEN
+        RAISE EXCEPTION 'audit.set_changed_by: el usuario no puede ser nulo ni vacío';
+    END IF;
+
+    PERFORM set_config('app.changed_by', btrim(p_user), true);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION audit.log_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = audit, public
+AS $$
+DECLARE
+    v_operation  CHAR(1);
+    v_old_data   JSONB;
+    v_new_data   JSONB;
+    v_record_id  TEXT;
+    v_changed_by TEXT;
+    v_audit_table TEXT := TG_ARGV[0];
+    v_pk_column   TEXT := TG_ARGV[1];
+BEGIN
+    v_changed_by := COALESCE(
+        NULLIF(current_setting('app.changed_by', true), ''),
+        session_user
+    );
+
+    IF TG_OP = 'INSERT' THEN
+        v_operation := 'C';
+        v_old_data := NULL;
+        v_new_data := to_jsonb(NEW);
+        EXECUTE format('SELECT ($1).%I::TEXT', v_pk_column) INTO v_record_id USING NEW;
+    ELSIF TG_OP = 'UPDATE' THEN
+        v_operation := 'U';
+        v_old_data := to_jsonb(OLD);
+        v_new_data := to_jsonb(NEW);
+        EXECUTE format('SELECT ($1).%I::TEXT', v_pk_column) INTO v_record_id USING NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+        v_operation := 'D';
+        v_old_data := to_jsonb(OLD);
+        v_new_data := NULL;
+        EXECUTE format('SELECT ($1).%I::TEXT', v_pk_column) INTO v_record_id USING OLD;
+    END IF;
+
+    INSERT INTO audit.log (
+        table_name,
+        record_id,
+        operation,
+        old_data,
+        new_data,
+        changed_by
+    ) VALUES (
+        TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME,
+        v_record_id,
+        v_operation,
+        v_old_data,
+        v_new_data,
+        v_changed_by
+    );
+
+    EXECUTE format(
+        'INSERT INTO audit.%I (%I, operation, old_data, new_data, changed_by)
+         VALUES ($1::INTEGER, $2, $3, $4, $5)',
+        v_audit_table,
+        v_pk_column
+    )
+    USING v_record_id, v_operation, v_old_data, v_new_data, v_changed_by;
+
+    RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
+CREATE TRIGGER trg_audit_user_app
+AFTER INSERT OR UPDATE OR DELETE ON user_app
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('user_app_audit', 'id_user');
+
+CREATE TRIGGER trg_audit_composer
+AFTER INSERT OR UPDATE OR DELETE ON composer
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('composer_audit', 'id_composer');
+
+CREATE TRIGGER trg_audit_work
+AFTER INSERT OR UPDATE OR DELETE ON work
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('work_audit', 'id_work');
+
+CREATE TRIGGER trg_audit_composition
+AFTER INSERT OR UPDATE OR DELETE ON composition
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('composition_audit', 'id_composition');
+
+CREATE TRIGGER trg_audit_genre
+AFTER INSERT OR UPDATE OR DELETE ON genre
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('genre_audit', 'id_genre');
+
+CREATE TRIGGER trg_audit_work_genre
+AFTER INSERT OR UPDATE OR DELETE ON work_genre
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('work_genre_audit', 'id_work_genre');
+
+CREATE TRIGGER trg_audit_director
+AFTER INSERT OR UPDATE OR DELETE ON director
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('director_audit', 'id_director');
+
+CREATE TRIGGER trg_audit_artist
+AFTER INSERT OR UPDATE OR DELETE ON artist
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('artist_audit', 'id_artist');
+
+CREATE TRIGGER trg_audit_type_instrument
+AFTER INSERT OR UPDATE OR DELETE ON type_instrument
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('type_instrument_audit', 'id_type_instrument');
+
+CREATE TRIGGER trg_audit_instrument
+AFTER INSERT OR UPDATE OR DELETE ON instrument
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('instrument_audit', 'id_instrument');
+
+CREATE TRIGGER trg_audit_type_interpretation
+AFTER INSERT OR UPDATE OR DELETE ON type_interpretation
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('type_interpretation_audit', 'id_type_interpretation');
+
+CREATE TRIGGER trg_audit_interpretation
+AFTER INSERT OR UPDATE OR DELETE ON interpretation
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('interpretation_audit', 'id_interpretation');
+
+CREATE TRIGGER trg_audit_interpretation_artist
+AFTER INSERT OR UPDATE OR DELETE ON interpretation_artist
+FOR EACH ROW EXECUTE FUNCTION audit.log_change('interpretation_artist_audit', 'id_interpretation_artist');
+
 COMMIT;
