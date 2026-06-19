@@ -78,6 +78,9 @@ npm run dev
 
 API en `http://localhost:3000`
 
+**Documentación Swagger:** [http://localhost:3000/api/docs](http://localhost:3000/api/docs)  
+Especificación OpenAPI JSON: `http://localhost:3000/api/docs/openapi.json`
+
 ### 3. Frontend
 
 ```bash
@@ -98,9 +101,17 @@ App en `http://localhost:4200`
    - `backend/.env` → `GOOGLE_CLIENT_ID`
    - `frontend/src/environments/environment.ts` → `googleClientId`
 
+## Documentación API (Swagger)
+
+Con el backend en ejecución, abre **http://localhost:3000/api/docs** para explorar y probar todos los endpoints de forma interactiva.
+
+- Autenticación: usa el botón **Authorize** e introduce `Bearer <token>` (o solo el token, según la UI).
+- Endpoints con archivos (`POST /api/works`, `POST /api/interpretations`) usan `multipart/form-data`.
+- La especificación OpenAPI 3.0 está en `backend/src/docs/` y se expone en `/api/docs/openapi.json`.
+
 ## API REST — endpoints principales
 
-Todas las rutas (salvo auth y health) requieren header `Authorization: Bearer <token>`.
+Todas las rutas (salvo auth, health y docs) requieren header `Authorization: Bearer <token>`.
 
 ### Auth
 

@@ -10,11 +10,14 @@ import catalogRoutes from './modules/catalog/catalog.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { ensureScoresDir, SCORES_DIR } from './utils/scoreFiles.js';
 import { ensureAudioDir, AUDIO_DIR } from './utils/audioFiles.js';
+import { mountSwagger } from './config/swagger.js';
 
 ensureScoresDir();
 ensureAudioDir();
 
 const app = express();
+
+mountSwagger(app);
 
 app.use(
   helmet({
