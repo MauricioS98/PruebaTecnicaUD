@@ -10,33 +10,27 @@
         <button
           type="button"
           class="audio-player__btn"
-          [class.audio-player__btn--active]="player.shuffle()"
-          (click)="player.toggleShuffle()"
-          title="Aleatorio"
+          [disabled]="!player.canGoPrevious()"
+          (click)="$event.stopPropagation(); player.previous()"
+          title="Anterior"
         >
-          🔀
-        </button>
-        <button type="button" class="audio-player__btn" (click)="player.previous()" title="Anterior">
           ⏮
         </button>
-        <button type="button" class="audio-player__btn audio-player__btn--main" (click)="player.togglePlay()">
+        <button
+          type="button"
+          class="audio-player__btn audio-player__btn--main"
+          (click)="$event.stopPropagation(); player.togglePlay()"
+        >
           {{ player.isPlaying() ? '⏸' : '▶' }}
-        </button>
-        <button type="button" class="audio-player__btn" (click)="player.next()" title="Siguiente">
-          ⏭
         </button>
         <button
           type="button"
           class="audio-player__btn"
-          [class.audio-player__btn--active]="player.repeatMode() !== 'off'"
-          (click)="player.cycleRepeat()"
-          title="Repetir"
+          [disabled]="!player.canGoNext()"
+          (click)="$event.stopPropagation(); player.next()"
+          title="Siguiente"
         >
-          @if (player.repeatMode() === 'one') {
-            🔂
-          } @else {
-            🔁
-          }
+          ⏭
         </button>
       </div>
 

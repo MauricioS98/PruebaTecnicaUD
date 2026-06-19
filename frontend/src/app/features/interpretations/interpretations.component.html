@@ -15,6 +15,11 @@
           Nueva interpretación
         </button>
       }
+      @if (playableTrackCount() > 0) {
+        <button class="oa-btn oa-btn--secondary" type="button" (click)="playAll()">
+          Reproducir
+        </button>
+      }
       @if (auth.isAdmin()) {
         <button class="oa-btn oa-btn--secondary" type="button" (click)="openForm(true)">
           Nueva interpretación histórica
@@ -266,10 +271,12 @@
           <span class="oa-label">Artistas</span>
           @if (formHistoric()) {
             <span class="oa-text-muted interp-form__hint">Opcional</span>
-          } @else if (selectedType(); as type) {
-            <span class="oa-text-muted interp-form__hint">
-              Requiere {{ type.min_artist }}-{{ type.max_artist }} intérpretes
-            </span>
+          } @else {
+            @if (selectedType(); as type) {
+              <span class="oa-text-muted interp-form__hint">
+                Requiere {{ type.min_artist }}-{{ type.max_artist }} intérpretes
+              </span>
+            }
           }
           <button class="oa-btn oa-btn--ghost" type="button" (click)="addArtistRow()">+ Añadir</button>
         </div>

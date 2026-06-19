@@ -106,6 +106,14 @@ export class InterpretationsComponent implements OnInit {
       : this.types().filter((t) => t.name !== 'Histórico')
   );
 
+  readonly playableTracks = computed(() =>
+    this.filteredInterpretations()
+      .map((i) => this.toTrack(i))
+      .filter((t): t is PlaybackTrack => !!t)
+  );
+
+  readonly playableTrackCount = computed(() => this.playableTracks().length);
+
   readonly selectedPlayableCount = computed(() =>
     this.selectedIds().filter((id) => {
       const item = this.interpretations().find((i) => i.id_interpretation === id);
@@ -173,25 +181,26 @@ export class InterpretationsComponent implements OnInit {
     const track = this.toTrack(item);
     if (!track) return;
 
-    const selected = this.selectedIds();
-    if (selected.length > 1 && selected.includes(item.id_interpretation)) {
-      const tracks = this.interpretations()
-        .filter((i) => selected.includes(i.id_interpretation))
-        .map((i) => this.toTrack(i))
-        .filter((t): t is PlaybackTrack => !!t);
-      const startIndex = tracks.findIndex((t) => t.id === item.id_interpretation);
-      this.player.playTracks(tracks, Math.max(startIndex, 0));
+    const playlist = this.playableTracks();
+    const startIndex = playlist.findIndex((t) => t.id === item.id_interpretation);
+
+    if (startIndex >= 0 && playlist.length > 0) {
+      this.player.playTracks(playlist, startIndex);
       return;
     }
 
     this.player.playSingle(track);
   }
 
+  playAll(): void {
+    const tracks = this.playableTracks();
+    if (!tracks.length) return;
+    this.player.playTracks(tracks, 0);
+  }
+
   playSelected(): void {
-    const tracks = this.interpretations()
-      .filter((i) => this.selectedIds().includes(i.id_interpretation))
-      .map((i) => this.toTrack(i))
-      .filter((t): t is PlaybackTrack => !!t);
+    const selected = new Set(this.selectedIds());
+    const tracks = this.playableTracks().filter((t) => selected.has(t.id));
 
     if (tracks.length) {
       this.player.playTracks(tracks, 0);

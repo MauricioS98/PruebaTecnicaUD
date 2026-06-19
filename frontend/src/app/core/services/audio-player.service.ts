@@ -7,27 +7,41 @@ export interface PlaybackTrack {
   url: string;
 }
 
-type RepeatMode = 'off' | 'all' | 'one';
-
 @Injectable({ providedIn: 'root' })
 export class AudioPlayerService {
   private readonly audio = new Audio();
+  private loadGeneration = 0;
+  private suppressEnded = false;
 
   readonly queue = signal<PlaybackTrack[]>([]);
   readonly currentIndex = signal(-1);
+  readonly activeTrack = signal<PlaybackTrack | null>(null);
+  readonly isOpen = signal(false);
   readonly isPlaying = signal(false);
-  readonly shuffle = signal(false);
-  readonly repeatMode = signal<RepeatMode>('off');
   readonly currentTime = signal(0);
   readonly duration = signal(0);
 
   readonly currentTrack = computed(() => {
     const index = this.currentIndex();
     const tracks = this.queue();
-    return index >= 0 && index < tracks.length ? tracks[index] : null;
+    if (index >= 0 && index < tracks.length) {
+      return tracks[index];
+    }
+    return this.activeTrack();
   });
 
-  readonly hasActivePlayer = computed(() => this.currentTrack() !== null);
+  readonly hasActivePlayer = computed(() => this.isOpen());
+
+  readonly canGoPrevious = computed(() => {
+    if (this.currentIndex() > 0) return true;
+    return this.currentIndex() === 0 && this.currentTime() > 3;
+  });
+
+  readonly canGoNext = computed(() => {
+    const index = this.currentIndex();
+    const tracks = this.queue();
+    return index >= 0 && index < tracks.length - 1;
+  });
 
   readonly progress = computed(() => {
     const duration = this.duration();
@@ -36,7 +50,7 @@ export class AudioPlayerService {
   });
 
   constructor() {
-    this.audio.preload = 'none';
+    this.audio.preload = 'auto';
 
     this.audio.addEventListener('timeupdate', () => {
       this.currentTime.set(this.audio.currentTime);
@@ -58,8 +72,11 @@ export class AudioPlayerService {
 
   playTracks(tracks: PlaybackTrack[], startIndex = 0): void {
     if (!tracks.length) return;
-    this.queue.set(tracks);
-    void this.loadAndPlay(startIndex);
+
+    const safeIndex = Math.min(Math.max(startIndex, 0), tracks.length - 1);
+    this.isOpen.set(true);
+    this.queue.set([...tracks]);
+    void this.loadAndPlay(safeIndex);
   }
 
   playSingle(track: PlaybackTrack): void {
@@ -68,73 +85,29 @@ export class AudioPlayerService {
 
   togglePlay(): void {
     if (!this.currentTrack()) return;
+
     if (this.audio.paused) {
-      void this.audio.play();
+      void this.audio.play().catch(() => this.isPlaying.set(false));
     } else {
       this.audio.pause();
     }
   }
 
   next(): void {
-    const tracks = this.queue();
-    if (!tracks.length) return;
-
-    if (this.repeatMode() === 'one') {
-      this.audio.currentTime = 0;
-      void this.audio.play();
-      return;
-    }
-
-    let nextIndex = this.currentIndex() + 1;
-
-    if (this.shuffle()) {
-      if (tracks.length === 1) {
-        nextIndex = 0;
-      } else {
-        do {
-          nextIndex = Math.floor(Math.random() * tracks.length);
-        } while (nextIndex === this.currentIndex());
-      }
-    }
-
-    if (nextIndex >= tracks.length) {
-      if (this.repeatMode() === 'all') {
-        nextIndex = 0;
-      } else {
-        this.stop();
-        return;
-      }
-    }
-
+    const nextIndex = this.currentIndex() + 1;
+    if (nextIndex >= this.queue().length) return;
     void this.loadAndPlay(nextIndex);
   }
 
   previous(): void {
-    if (this.audio.currentTime > 3) {
+    if (this.currentIndex() === 0 && this.audio.currentTime > 3) {
       this.audio.currentTime = 0;
       return;
     }
 
-    const tracks = this.queue();
-    if (!tracks.length) return;
-
-    let prevIndex = this.currentIndex() - 1;
-    if (prevIndex < 0) {
-      prevIndex = this.repeatMode() === 'all' ? tracks.length - 1 : 0;
-    }
-
+    const prevIndex = this.currentIndex() - 1;
+    if (prevIndex < 0) return;
     void this.loadAndPlay(prevIndex);
-  }
-
-  toggleShuffle(): void {
-    this.shuffle.update((value) => !value);
-  }
-
-  cycleRepeat(): void {
-    const order: RepeatMode[] = ['off', 'all', 'one'];
-    const current = this.repeatMode();
-    const next = order[(order.indexOf(current) + 1) % order.length];
-    this.repeatMode.set(next);
   }
 
   seekByPercent(percent: number): void {
@@ -143,6 +116,10 @@ export class AudioPlayerService {
   }
 
   stop(): void {
+    this.loadGeneration += 1;
+    this.suppressEnded = false;
+    this.isOpen.set(false);
+    this.activeTrack.set(null);
     this.audio.pause();
     this.audio.removeAttribute('src');
     this.audio.load();
@@ -150,6 +127,7 @@ export class AudioPlayerService {
     this.currentIndex.set(-1);
     this.currentTime.set(0);
     this.duration.set(0);
+    this.queue.set([]);
   }
 
   isCurrentTrack(id: number): boolean {
@@ -157,28 +135,73 @@ export class AudioPlayerService {
   }
 
   private onTrackEnded(): void {
-    if (this.repeatMode() === 'one') {
-      this.audio.currentTime = 0;
-      void this.audio.play();
+    if (this.suppressEnded) return;
+
+    const nextIndex = this.currentIndex() + 1;
+    if (nextIndex >= this.queue().length) {
+      this.isPlaying.set(false);
       return;
     }
-    this.next();
+
+    void this.loadAndPlay(nextIndex);
+  }
+
+  private waitForCanPlay(): Promise<void> {
+    if (this.audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      const onReady = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = () => {
+        cleanup();
+        reject(new Error('No se pudo cargar el audio'));
+      };
+      const cleanup = () => {
+        this.audio.removeEventListener('canplay', onReady);
+        this.audio.removeEventListener('error', onError);
+      };
+
+      this.audio.addEventListener('canplay', onReady, { once: true });
+      this.audio.addEventListener('error', onError, { once: true });
+    });
   }
 
   private async loadAndPlay(index: number): Promise<void> {
-    const track = this.queue()[index];
+    const tracks = this.queue();
+    const track = tracks[index];
     if (!track) return;
 
+    const generation = ++this.loadGeneration;
+    this.suppressEnded = true;
+    this.isOpen.set(true);
+    this.activeTrack.set(track);
     this.currentIndex.set(index);
     this.currentTime.set(0);
     this.duration.set(0);
-    this.audio.src = track.url;
-    this.audio.load();
+    this.audio.pause();
 
     try {
+      this.audio.src = track.url;
+      this.audio.load();
+
+      await this.waitForCanPlay();
+      if (generation !== this.loadGeneration) return;
+
       await this.audio.play();
+      if (generation !== this.loadGeneration) return;
+
+      this.isPlaying.set(true);
     } catch {
+      if (generation !== this.loadGeneration) return;
       this.isPlaying.set(false);
+    } finally {
+      if (generation === this.loadGeneration) {
+        this.suppressEnded = false;
+      }
     }
   }
 }

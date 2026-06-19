@@ -62,9 +62,14 @@
   font-size: $text-base;
   transition: all $transition-fast;
 
-  &:hover {
+  &:hover:not(:disabled) {
     color: $color-text-primary;
     background: rgba(255, 255, 255, 0.06);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
   }
 
   &--active {
