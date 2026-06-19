@@ -7,6 +7,7 @@ import {
   AudioPlayerService,
   PlaybackTrack,
 } from '../../core/services/audio-player.service';
+import { ConfirmDialogService } from '../../core/services/confirm-dialog.service';
 import {
   Artist,
   CatalogInstrument,
@@ -32,6 +33,7 @@ interface ArtistFormRow {
 })
 export class InterpretationsComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   readonly auth = inject(AuthService);
   readonly player = inject(AudioPlayerService);
 
@@ -418,9 +420,12 @@ export class InterpretationsComponent implements OnInit {
   async deleteInterpretation(item: Interpretation): Promise<void> {
     if (!this.canManageInterpretation(item)) return;
 
-    const confirmed = confirm(
-      `¿Eliminar la interpretación de "${item.work?.name ?? 'esta obra'}"?`
-    );
+    const confirmed = await this.confirmDialog.confirm({
+      title: 'Eliminar interpretación',
+      message: `¿Eliminar la interpretación de "${item.work?.name ?? 'esta obra'}"? Esta acción no se puede deshacer.`,
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
     if (!confirmed) return;
 
     this.deletingId.set(item.id_interpretation);

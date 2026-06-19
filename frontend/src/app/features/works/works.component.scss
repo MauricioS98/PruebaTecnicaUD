@@ -58,8 +58,11 @@
 }
 
 .works__action-btn {
-  padding: $space-1 $space-3;
-  font-size: $text-xs;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
 
   &--danger {
     color: #f0a0a0;
@@ -69,6 +72,11 @@
       background: rgba(220, 80, 80, 0.1);
     }
   }
+}
+
+.works__action-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .works__blocked {

@@ -1,0 +1,49 @@
+@use '../../../styles/tokens' as *;
+
+.confirm-dialog__backdrop {
+  z-index: 1100;
+}
+
+.confirm-dialog {
+  max-width: 440px;
+  padding: $space-6;
+}
+
+.confirm-dialog__head {
+  margin-bottom: $space-4;
+}
+
+.confirm-dialog__eyebrow {
+  font-size: $text-xs;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $color-text-muted;
+  margin-bottom: $space-2;
+}
+
+.confirm-dialog__title {
+  font-size: $text-xl;
+  line-height: 1.3;
+}
+
+.confirm-dialog__message {
+  font-size: $text-sm;
+  line-height: 1.6;
+  color: $color-text-secondary;
+  margin-bottom: $space-6;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-3;
+}
+
+.confirm-dialog__confirm--danger {
+  background: #c94a4a;
+  color: #fff;
+
+  &:hover {
+    background: #d85a5a;
+  }
+}

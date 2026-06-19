@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { ConfirmDialogService } from '../../core/services/confirm-dialog.service';
 import { Composer, Genre, Work } from '../../core/models/api.models';
 import { environment } from '../../../environments/environment';
 
@@ -15,6 +16,7 @@ import { environment } from '../../../environments/environment';
 })
 export class WorksComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   readonly auth = inject(AuthService);
 
   readonly works = signal<Work[]>([]);
@@ -300,7 +302,12 @@ export class WorksComponent implements OnInit {
   async deleteWork(work: Work): Promise<void> {
     if (!this.canDeleteWork(work)) return;
 
-    const confirmed = confirm(`¿Eliminar la obra "${work.name}"? Esta acción no se puede deshacer.`);
+    const confirmed = await this.confirmDialog.confirm({
+      title: 'Eliminar obra',
+      message: `¿Eliminar la obra "${work.name}"? Esta acción no se puede deshacer.`,
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
     if (!confirmed) return;
 
     this.deletingId.set(work.id_work);

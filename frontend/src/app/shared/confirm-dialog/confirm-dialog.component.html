@@ -1,0 +1,35 @@
+@if (dialog.state(); as data) {
+  <div class="oa-modal-backdrop confirm-dialog__backdrop" (click)="dialog.cancel()">
+    <div
+      class="oa-modal confirm-dialog"
+      role="alertdialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'confirm-dialog-title'"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="confirm-dialog__head">
+        <p class="confirm-dialog__eyebrow">OrchestApp</p>
+        <h2 id="confirm-dialog-title" class="confirm-dialog__title oa-font-display">
+          {{ data.title }}
+        </h2>
+      </header>
+
+      <p class="confirm-dialog__message">{{ data.message }}</p>
+
+      <div class="confirm-dialog__actions">
+        <button type="button" class="oa-btn oa-btn--secondary" (click)="dialog.cancel()">
+          {{ data.cancelLabel }}
+        </button>
+        <button
+          type="button"
+          class="oa-btn"
+          [class.oa-btn--primary]="!data.danger"
+          [class.confirm-dialog__confirm--danger]="data.danger"
+          (click)="dialog.accept()"
+        >
+          {{ data.confirmLabel }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

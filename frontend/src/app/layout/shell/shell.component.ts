@@ -4,11 +4,19 @@ import { AuthService } from '../../core/auth/auth.service';
 import { AudioPlayerService } from '../../core/services/audio-player.service';
 import { BrandLogoComponent } from '../../shared/brand-logo/brand-logo.component';
 import { AudioPlayerComponent } from '../../shared/audio-player/audio-player.component';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, BrandLogoComponent, AudioPlayerComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    BrandLogoComponent,
+    AudioPlayerComponent,
+    ConfirmDialogComponent,
+  ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
 })
