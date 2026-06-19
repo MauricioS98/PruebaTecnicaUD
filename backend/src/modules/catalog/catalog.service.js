@@ -272,6 +272,25 @@ export async function listArtists() {
   return Artist.findAll({ order: [['nickname', 'ASC']] });
 }
 
+export async function createArtist(payload, user) {
+  const nickname = String(payload.nickname ?? '').trim();
+  if (!nickname) {
+    throw new ApiError(400, 'El nombre artístico es obligatorio');
+  }
+
+  return sequelize.transaction(async (transaction) => {
+    await setAuditUser(user.email, transaction);
+    return Artist.create(
+      {
+        id_user: null,
+        nickname,
+        description: String(payload.description ?? '').trim(),
+      },
+      { transaction }
+    );
+  });
+}
+
 export async function getArtistById(id) {
   const artist = await Artist.findByPk(id);
   if (!artist) throw new ApiError(404, 'Artista no encontrado');

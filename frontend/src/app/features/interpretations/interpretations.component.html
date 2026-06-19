@@ -341,7 +341,18 @@
               </span>
             }
           }
-          <button class="oa-btn oa-btn--ghost" type="button" (click)="addArtistRow()">+ Añadir</button>
+          <div class="interp-form__row-actions">
+            @if (canManageArtists()) {
+              <button
+                class="oa-btn oa-btn--ghost"
+                type="button"
+                (click)="openCreateArtist(artistRows().length ? artistRows().length - 1 : 0)"
+              >
+                + Nuevo artista
+              </button>
+            }
+            <button class="oa-btn oa-btn--ghost" type="button" (click)="addArtistRow()">+ Añadir</button>
+          </div>
         </div>
         @if (artistRows().length) {
         <div class="oa-picker">
@@ -350,17 +361,28 @@
               <div class="oa-picker__row">
                 <div>
                   <span class="oa-picker__row-label">Intérprete {{ $index + 1 }}</span>
-                  <select
-                    class="oa-input"
-                    [name]="'interpArtist-' + $index"
-                    [ngModel]="row.id_artist"
-                    (ngModelChange)="updateArtistRow($index, 'id_artist', +$event)"
-                  >
-                    <option [ngValue]="0">Selecciona un artista</option>
-                    @for (artist of artists(); track artist.id_artist) {
-                      <option [ngValue]="artist.id_artist">{{ artist.nickname }}</option>
+                  <div class="interp-form__artist-select">
+                    <select
+                      class="oa-input"
+                      [name]="'interpArtist-' + $index"
+                      [ngModel]="row.id_artist"
+                      (ngModelChange)="updateArtistRow($index, 'id_artist', +$event)"
+                    >
+                      <option [ngValue]="0">Selecciona un artista</option>
+                      @for (artist of artists(); track artist.id_artist) {
+                        <option [ngValue]="artist.id_artist">{{ artist.nickname }}</option>
+                      }
+                    </select>
+                    @if (canManageArtists()) {
+                      <button
+                        class="oa-btn oa-btn--ghost interp-form__artist-new"
+                        type="button"
+                        (click)="openCreateArtist($index)"
+                      >
+                        Nuevo
+                      </button>
                     }
-                  </select>
+                  </div>
                 </div>
                 <div>
                   <span class="oa-picker__row-label">Instrumento</span>
@@ -408,6 +430,63 @@
           (click)="submitInterpretation()"
         >
           {{ saving() ? 'Guardando...' : (isEditing() ? 'Guardar cambios' : 'Registrar interpretación') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showArtistForm()) {
+  <div class="oa-modal-backdrop" (click)="closeCreateArtist()">
+    <div class="oa-modal interp-artist-form" role="dialog" (click)="$event.stopPropagation()">
+      <header class="interp-artist-form__head">
+        <div>
+          <p class="catalog-page__eyebrow">Intérprete</p>
+          <h3 class="oa-font-display">Nuevo artista</h3>
+          <p class="interp-artist-form__hint oa-text-muted">
+            Se registrará sin cuenta de usuario y quedará disponible en esta interpretación.
+          </p>
+        </div>
+        <button class="oa-btn oa-btn--ghost" type="button" (click)="closeCreateArtist()">✕</button>
+      </header>
+
+      <div class="interp-artist-form__field">
+        <label class="oa-label" for="interp-artist-nickname">Nombre artístico</label>
+        <input
+          id="interp-artist-nickname"
+          class="oa-input"
+          type="text"
+          [ngModel]="formArtistNickname()"
+          (ngModelChange)="formArtistNickname.set($event)"
+        />
+      </div>
+
+      <div class="interp-artist-form__field">
+        <label class="oa-label" for="interp-artist-desc">Descripción</label>
+        <textarea
+          id="interp-artist-desc"
+          class="oa-input interp-artist-form__textarea"
+          rows="2"
+          [ngModel]="formArtistDescription()"
+          (ngModelChange)="formArtistDescription.set($event)"
+        ></textarea>
+      </div>
+
+      @if (artistFormError()) {
+        <p class="catalog-page__error">{{ artistFormError() }}</p>
+      }
+
+      <div class="interp-artist-form__actions">
+        <button class="oa-btn oa-btn--secondary" type="button" (click)="closeCreateArtist()">
+          Cancelar
+        </button>
+        <button
+          class="oa-btn oa-btn--primary"
+          type="button"
+          [disabled]="creatingArtist()"
+          (click)="submitCreateArtist()"
+        >
+          {{ creatingArtist() ? 'Guardando...' : 'Crear y seleccionar' }}
         </button>
       </div>
     </div>

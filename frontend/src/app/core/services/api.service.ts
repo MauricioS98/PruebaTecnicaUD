@@ -3,12 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import {
   Artist,
+  AdminInstrumentsCatalog,
   CatalogData,
+  CatalogInstrument,
   Composer,
   AdminUser,
   DashboardData,
   Director,
   Interpretation,
+  TypeInstrument,
   Work,
 } from '../models/api.models';
 
@@ -33,6 +36,55 @@ export class ApiService {
     return this.http.patch<{ success: boolean; data: AdminUser }>(
       `${this.base}/admin/users/${userId}`,
       { isAdmin }
+    );
+  }
+
+  getAdminInstrumentsCatalog() {
+    return this.http.get<{ success: boolean; data: AdminInstrumentsCatalog }>(
+      `${this.base}/admin/instruments-catalog`
+    );
+  }
+
+  createTypeInstrument(payload: { name: string; description?: string }) {
+    return this.http.post<{ success: boolean; data: TypeInstrument }>(
+      `${this.base}/admin/type-instruments`,
+      payload
+    );
+  }
+
+  updateTypeInstrument(id: number, payload: { name?: string; description?: string }) {
+    return this.http.put<{ success: boolean; data: TypeInstrument }>(
+      `${this.base}/admin/type-instruments/${id}`,
+      payload
+    );
+  }
+
+  deleteTypeInstrument(id: number) {
+    return this.http.delete<{ success: boolean; data: { deleted: boolean } }>(
+      `${this.base}/admin/type-instruments/${id}`
+    );
+  }
+
+  createInstrument(payload: { name: string; description?: string; id_type_instrument: number }) {
+    return this.http.post<{ success: boolean; data: CatalogInstrument }>(
+      `${this.base}/admin/instruments`,
+      payload
+    );
+  }
+
+  updateInstrument(
+    id: number,
+    payload: { name?: string; description?: string; id_type_instrument?: number }
+  ) {
+    return this.http.put<{ success: boolean; data: CatalogInstrument }>(
+      `${this.base}/admin/instruments/${id}`,
+      payload
+    );
+  }
+
+  deleteInstrument(id: number) {
+    return this.http.delete<{ success: boolean; data: { deleted: boolean } }>(
+      `${this.base}/admin/instruments/${id}`
     );
   }
 
@@ -99,6 +151,10 @@ export class ApiService {
 
   getArtists() {
     return this.http.get<{ success: boolean; data: Artist[] }>(`${this.base}/artists`);
+  }
+
+  createArtist(payload: { nickname: string; description?: string }) {
+    return this.http.post<{ success: boolean; data: Artist }>(`${this.base}/artists`, payload);
   }
 
   getArtist(id: number) {

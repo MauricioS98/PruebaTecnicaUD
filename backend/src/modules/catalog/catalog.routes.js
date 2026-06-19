@@ -39,6 +39,7 @@ router.get('/directors/:id', authJwt, ctrl.getDirector);
 router.put('/directors/:id', authJwt, requireWriteAccess, ctrl.updateDirector);
 
 router.get('/artists', authJwt, ctrl.listArtists);
+router.post('/artists', authJwt, requireDirectorOrAdmin, ctrl.createArtist);
 router.get('/artists/:id', authJwt, ctrl.getArtist);
 router.put('/artists/:id', authJwt, requireWriteAccess, ctrl.updateArtist);
 

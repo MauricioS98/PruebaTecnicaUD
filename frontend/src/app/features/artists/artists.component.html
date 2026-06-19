@@ -4,7 +4,11 @@
       <p class="catalog-page__eyebrow">Intérpretes</p>
       <h2 class="oa-font-display">Artistas</h2>
     </div>
-    @if (!auth.canWrite()) {
+    @if (canManageArtists()) {
+      <button class="oa-btn oa-btn--primary" type="button" (click)="openForm()">
+        Nuevo artista
+      </button>
+    } @else {
       <span class="oa-badge oa-badge--neutral">Solo lectura</span>
     }
   </header>
@@ -32,6 +36,7 @@
             <tr>
               <th>Nombre artístico</th>
               <th>Descripción</th>
+              <th>Cuenta</th>
               <th>Perfil</th>
             </tr>
           </thead>
@@ -43,6 +48,13 @@
                   <span class="catalog-page__desc oa-text-secondary">
                     {{ artist.description || 'Sin descripción' }}
                   </span>
+                </td>
+                <td>
+                  @if (artist.id_user) {
+                    <span class="oa-badge oa-badge--blue">Con usuario</span>
+                  } @else {
+                    <span class="oa-badge oa-badge--neutral">Sin usuario</span>
+                  }
                 </td>
                 <td>
                   <a class="catalog-page__link" [routerLink]="['/artists', artist.id_artist]">
@@ -63,3 +75,53 @@
     <p class="catalog-page__error">{{ error() }}</p>
   }
 </div>
+
+@if (showForm()) {
+  <div class="oa-modal-backdrop" (click)="closeForm()">
+    <div class="oa-modal artists-form" role="dialog" (click)="$event.stopPropagation()">
+      <header class="artists-form__head">
+        <div>
+          <p class="catalog-page__eyebrow">Intérprete</p>
+          <h3 class="oa-font-display">Nuevo artista</h3>
+          <p class="artists-form__hint oa-text-muted">
+            El artista quedará registrado sin cuenta de usuario.
+          </p>
+        </div>
+        <button class="oa-btn oa-btn--ghost" type="button" (click)="closeForm()">✕</button>
+      </header>
+
+      <div class="artists-form__field">
+        <label class="oa-label" for="artist-nickname">Nombre artístico</label>
+        <input
+          id="artist-nickname"
+          class="oa-input"
+          type="text"
+          [ngModel]="formNickname()"
+          (ngModelChange)="formNickname.set($event)"
+        />
+      </div>
+
+      <div class="artists-form__field">
+        <label class="oa-label" for="artist-desc">Descripción</label>
+        <textarea
+          id="artist-desc"
+          class="oa-input artists-form__textarea"
+          rows="3"
+          [ngModel]="formDescription()"
+          (ngModelChange)="formDescription.set($event)"
+        ></textarea>
+      </div>
+
+      @if (formError()) {
+        <p class="catalog-page__error">{{ formError() }}</p>
+      }
+
+      <div class="artists-form__actions">
+        <button class="oa-btn oa-btn--secondary" type="button" (click)="closeForm()">Cancelar</button>
+        <button class="oa-btn oa-btn--primary" type="button" [disabled]="saving()" (click)="submitArtist()">
+          {{ saving() ? 'Guardando...' : 'Crear artista' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

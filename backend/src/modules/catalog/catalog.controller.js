@@ -101,6 +101,15 @@ export async function listArtists(_req, res, next) {
   }
 }
 
+export async function createArtist(req, res, next) {
+  try {
+    const data = await catalogService.createArtist(req.body, req.user);
+    res.status(201).json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getArtist(req, res, next) {
   try {
     const data = await catalogService.getArtistById(req.params.id);

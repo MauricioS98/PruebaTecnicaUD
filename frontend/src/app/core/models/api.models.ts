@@ -76,7 +76,20 @@ export interface TypeInterpretation {
 export interface CatalogInstrument {
   id_instrument: number;
   name: string;
+  description?: string;
   id_type_instrument: number;
+  type_instrument?: { id_type_instrument: number; name: string };
+}
+
+export interface TypeInstrument {
+  id_type_instrument: number;
+  name: string;
+  description?: string;
+}
+
+export interface AdminInstrumentsCatalog {
+  typeInstruments: TypeInstrument[];
+  instruments: CatalogInstrument[];
 }
 
 export interface DashboardData {

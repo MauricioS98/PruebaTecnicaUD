@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, dashboardGuard, guestGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, dashboardGuard, guestGuard } from './core/guards/auth.guard';
 import { HomeRedirectComponent } from './core/home-redirect/home-redirect.component';
 import { ShellComponent } from './layout/shell/shell.component';
 import { LoginComponent } from './features/auth/login/login.component';
@@ -10,6 +10,7 @@ import { InterpretationsComponent } from './features/interpretations/interpretat
 import { ArtistsComponent } from './features/artists/artists.component';
 import { DirectorsComponent } from './features/directors/directors.component';
 import { PerformerProfileComponent } from './features/performer-profile/performer-profile.component';
+import { AdminInstrumentsComponent } from './features/admin-instruments/admin-instruments.component';
 
 export const routes: Routes = [
   {
@@ -24,6 +25,7 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', component: HomeRedirectComponent },
       { path: 'dashboard', component: DashboardComponent, canActivate: [dashboardGuard] },
+      { path: 'admin/instruments', component: AdminInstrumentsComponent, canActivate: [adminGuard] },
       { path: 'profile', component: ProfileComponent },
       { path: 'works', component: WorksComponent },
       { path: 'interpretations', component: InterpretationsComponent },

@@ -200,6 +200,68 @@
   }
 }
 
+.interp-form__row-actions {
+  display: flex;
+  gap: $space-2;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.interp-form__artist-select {
+  display: flex;
+  gap: $space-2;
+  align-items: center;
+
+  .oa-input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.interp-form__artist-new {
+  flex-shrink: 0;
+  font-size: $text-xs;
+  padding-inline: $space-3;
+}
+
+.interp-artist-form {
+  max-width: 440px;
+}
+
+.interp-artist-form__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-5;
+
+  h3 {
+    font-size: $text-xl;
+    margin-top: $space-1;
+  }
+}
+
+.interp-artist-form__hint {
+  margin-top: $space-2;
+  font-size: $text-sm;
+}
+
+.interp-artist-form__field {
+  margin-bottom: $space-4;
+}
+
+.interp-artist-form__textarea {
+  resize: vertical;
+  min-height: 64px;
+}
+
+.interp-artist-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-3;
+  margin-top: $space-5;
+}
+
 .interp-form__hint {
   font-size: $text-xs;
   margin-bottom: $space-3;

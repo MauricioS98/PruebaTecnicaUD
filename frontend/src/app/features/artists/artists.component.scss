@@ -1,1 +1,40 @@
 @use '../catalog/catalog-page';
+@use '../../../styles/tokens' as *;
+
+.artists-form {
+  max-width: 480px;
+}
+
+.artists-form__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-6;
+
+  h3 {
+    font-size: $text-2xl;
+    margin-top: $space-1;
+  }
+}
+
+.artists-form__hint {
+  margin-top: $space-2;
+  font-size: $text-sm;
+}
+
+.artists-form__field {
+  margin-bottom: $space-5;
+}
+
+.artists-form__textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.artists-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-3;
+  margin-top: $space-6;
+}

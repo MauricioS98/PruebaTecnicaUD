@@ -63,7 +63,15 @@ export class InterpretationsComponent implements OnInit {
 
   readonly existingAudioUrl = signal<string | null>(null);
 
+  readonly showArtistForm = signal(false);
+  readonly artistFormRowIndex = signal<number | null>(null);
+  readonly formArtistNickname = signal('');
+  readonly formArtistDescription = signal('');
+  readonly creatingArtist = signal(false);
+  readonly artistFormError = signal<string | null>(null);
+
   readonly myDirectorId = computed(() => this.auth.directorProfileId());
+  readonly canManageArtists = computed(() => this.auth.isDirector() || this.auth.isAdmin());
   readonly isEditing = computed(() => !!this.editingInterpretation());
   readonly loadFileDateLabel = computed(() => {
     const iso = this.isEditing()
@@ -322,6 +330,62 @@ export class InterpretationsComponent implements OnInit {
     this.artistRows.update((rows) =>
       rows.map((row, i) => (i === index ? { ...row, [field]: value } : row))
     );
+  }
+
+  openCreateArtist(rowIndex: number): void {
+    if (!this.artistRows().length) {
+      this.addArtistRow();
+      rowIndex = 0;
+    }
+    this.artistFormRowIndex.set(rowIndex);
+    this.formArtistNickname.set('');
+    this.formArtistDescription.set('');
+    this.artistFormError.set(null);
+    this.showArtistForm.set(true);
+  }
+
+  closeCreateArtist(): void {
+    this.showArtistForm.set(false);
+    this.artistFormRowIndex.set(null);
+    this.artistFormError.set(null);
+  }
+
+  async submitCreateArtist(): Promise<void> {
+    const nickname = this.formArtistNickname().trim();
+    if (!nickname) {
+      this.artistFormError.set('El nombre artístico es obligatorio.');
+      return;
+    }
+
+    const rowIndex = this.artistFormRowIndex();
+    if (rowIndex === null) return;
+
+    this.creatingArtist.set(true);
+    this.artistFormError.set(null);
+
+    try {
+      const result = await firstValueFrom(
+        this.api.createArtist({
+          nickname,
+          description: this.formArtistDescription().trim(),
+        })
+      );
+      const created = result.data;
+      if (created) {
+        this.artists.update((list) =>
+          [...list, created].sort((a, b) => a.nickname.localeCompare(b.nickname))
+        );
+        this.updateArtistRow(rowIndex, 'id_artist', created.id_artist);
+      }
+      this.closeCreateArtist();
+    } catch (err: unknown) {
+      const message =
+        (err as { error?: { message?: string } })?.error?.message ??
+        'No se pudo crear el artista.';
+      this.artistFormError.set(message);
+    } finally {
+      this.creatingArtist.set(false);
+    }
   }
 
   onAudioSelected(event: Event): void {

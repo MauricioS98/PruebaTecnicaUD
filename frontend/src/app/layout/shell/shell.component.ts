@@ -41,6 +41,7 @@ export class ShellComponent {
   private readonly allNavItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '◈', requiresDashboard: true },
     { path: '/profile', label: 'Mi perfil', icon: '◉', requiresWrite: false },
+    { path: '/admin/instruments', label: 'Instrumentos', icon: '♬', requiresAdmin: true },
     { path: '/works', label: 'Obras', icon: '♫', requiresWrite: false },
     { path: '/interpretations', label: 'Interpretaciones', icon: '◎', requiresWrite: false },
     { path: '/artists', label: 'Artistas', icon: '✦', requiresWrite: false },
@@ -49,6 +50,9 @@ export class ShellComponent {
 
   readonly navItems = computed(() =>
     this.allNavItems.filter((item) => {
+      if (item.requiresAdmin) {
+        return this.auth.isAdmin();
+      }
       if (item.requiresDashboard) {
         return this.auth.canWrite() || this.auth.isAdmin();
       }
