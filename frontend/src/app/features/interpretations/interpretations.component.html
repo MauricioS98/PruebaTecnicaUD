@@ -169,12 +169,13 @@
         <select
           id="interp-work"
           class="oa-input"
-          [value]="formWorkId() ?? ''"
-          (change)="formWorkId.set(+$any($event.target).value || null)"
+          name="interpWork"
+          [ngModel]="formWorkId()"
+          (ngModelChange)="formWorkId.set($event)"
         >
-          <option value="">Selecciona una obra</option>
+          <option [ngValue]="null">Selecciona una obra</option>
           @for (work of works(); track work.id_work) {
-            <option [value]="work.id_work">{{ work.name }}</option>
+            <option [ngValue]="work.id_work">{{ work.name }}</option>
           }
         </select>
       </div>
@@ -184,12 +185,13 @@
         <select
           id="interp-type"
           class="oa-input"
-          [value]="formTypeId() ?? ''"
-          (change)="formTypeId.set(+$any($event.target).value || null)"
+          name="interpType"
+          [ngModel]="formTypeId()"
+          (ngModelChange)="formTypeId.set($event)"
         >
-          <option value="">Selecciona un tipo</option>
+          <option [ngValue]="null">Selecciona un tipo</option>
           @for (type of types(); track type.id_type_interpretation) {
-            <option [value]="type.id_type_interpretation">
+            <option [ngValue]="type.id_type_interpretation">
               {{ type.name }} ({{ type.min_artist }}-{{ type.max_artist }} artistas)
             </option>
           }
@@ -245,12 +247,13 @@
                   <span class="oa-picker__row-label">Intérprete {{ $index + 1 }}</span>
                   <select
                     class="oa-input"
-                    [value]="row.id_artist"
-                    (change)="updateArtistRow($index, 'id_artist', +$any($event.target).value)"
+                    [name]="'interpArtist-' + $index"
+                    [ngModel]="row.id_artist"
+                    (ngModelChange)="updateArtistRow($index, 'id_artist', +$event)"
                   >
-                    <option value="0">Selecciona un artista</option>
+                    <option [ngValue]="0">Selecciona un artista</option>
                     @for (artist of artists(); track artist.id_artist) {
-                      <option [value]="artist.id_artist">{{ artist.nickname }}</option>
+                      <option [ngValue]="artist.id_artist">{{ artist.nickname }}</option>
                     }
                   </select>
                 </div>
@@ -258,12 +261,13 @@
                   <span class="oa-picker__row-label">Instrumento</span>
                   <select
                     class="oa-input"
-                    [value]="row.id_instrument ?? ''"
-                    (change)="updateArtistRow($index, 'id_instrument', +$any($event.target).value || null)"
+                    [name]="'interpInstrument-' + $index"
+                    [ngModel]="row.id_instrument"
+                    (ngModelChange)="updateArtistRow($index, 'id_instrument', $event ? +$event : null)"
                   >
-                    <option value="">Instrumento (opcional)</option>
+                    <option [ngValue]="null">Instrumento (opcional)</option>
                     @for (inst of instruments(); track inst.id_instrument) {
-                      <option [value]="inst.id_instrument">{{ inst.name }}</option>
+                      <option [ngValue]="inst.id_instrument">{{ inst.name }}</option>
                     }
                   </select>
                 </div>

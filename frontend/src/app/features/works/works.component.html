@@ -150,9 +150,10 @@
           id="work-name"
           class="oa-input"
           type="text"
+          name="workName"
           placeholder="Ej. Sinfonía No. 5 en do menor"
-          [value]="formName()"
-          (input)="formName.set($any($event.target).value)"
+          [ngModel]="formName()"
+          (ngModelChange)="formName.set($event)"
         />
       </div>
 
@@ -162,8 +163,9 @@
           id="work-date"
           class="oa-input"
           type="date"
-          [value]="formDate()"
-          (input)="formDate.set($any($event.target).value)"
+          name="workDate"
+          [ngModel]="formDate()"
+          (ngModelChange)="formDate.set($event)"
         />
       </div>
 
@@ -173,9 +175,10 @@
           id="work-desc"
           class="oa-input works-form__textarea"
           rows="3"
+          name="workDescription"
           placeholder="Notas sobre la obra..."
-          [value]="formDescription()"
-          (input)="formDescription.set($any($event.target).value)"
+          [ngModel]="formDescription()"
+          (ngModelChange)="formDescription.set($event)"
         ></textarea>
       </div>
 

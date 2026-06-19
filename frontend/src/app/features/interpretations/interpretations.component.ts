@@ -1,4 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/auth/auth.service';
@@ -25,6 +26,7 @@ interface ArtistFormRow {
 @Component({
   selector: 'app-interpretations',
   standalone: true,
+  imports: [FormsModule],
   templateUrl: './interpretations.component.html',
   styleUrl: './interpretations.component.scss',
 })

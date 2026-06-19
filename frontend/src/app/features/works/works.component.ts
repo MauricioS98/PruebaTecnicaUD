@@ -1,4 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/auth/auth.service';
@@ -8,6 +9,7 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-works',
   standalone: true,
+  imports: [FormsModule],
   templateUrl: './works.component.html',
   styleUrl: './works.component.scss',
 })
@@ -156,7 +158,7 @@ export class WorksComponent implements OnInit {
     this.editingWork.set(work);
     this.formName.set(work.name);
     this.formDescription.set(work.description ?? '');
-    this.formDate.set(work.write_date);
+    this.formDate.set(this.toDateInputValue(work.write_date));
     this.selectedScoreFile.set(null);
     this.selectedScoreName.set(null);
     this.existingScoreUrl.set(this.scoreUrl(work));
@@ -301,5 +303,10 @@ export class WorksComponent implements OnInit {
     } finally {
       this.deletingId.set(null);
     }
+  }
+
+  private toDateInputValue(value: string): string {
+    if (!value) return '';
+    return value.slice(0, 10);
   }
 }
