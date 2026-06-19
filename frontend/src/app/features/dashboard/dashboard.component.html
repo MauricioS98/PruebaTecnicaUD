@@ -39,7 +39,6 @@
         <div class="dashboard__section">
           <div class="dashboard__section-head">
             <h3>{{ isAdminView() ? 'Obras registradas' : 'Mis obras publicadas' }}</h3>
-            <span class="oa-badge oa-badge--gold">Catálogo</span>
           </div>
           @if (works().length) {
             <div class="oa-table-wrap">
@@ -76,7 +75,6 @@
         <div class="dashboard__section">
           <div class="dashboard__section-head">
             <h3>{{ isAdminView() ? 'Interpretaciones recientes' : 'Mis interpretaciones' }}</h3>
-            <span class="oa-badge oa-badge--blue">En vivo</span>
           </div>
           @if (interpretations().length) {
             <div class="interp-list">
