@@ -117,21 +117,12 @@
   height: $navbar-height;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: $space-6;
   padding: 0 $space-8;
   border-bottom: 1px solid $color-border;
   background: rgba($color-navy-dark, 0.6);
   backdrop-filter: blur(12px);
-
-  &--compact {
-    justify-content: flex-end;
-  }
-}
-
-.shell__search {
-  flex: 1;
-  max-width: 480px;
 }
 
 .shell__content {

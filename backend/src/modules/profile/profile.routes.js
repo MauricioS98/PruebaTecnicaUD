@@ -5,6 +5,8 @@ import * as ctrl from './profile.controller.js';
 const router = Router();
 
 router.get('/', authJwt, ctrl.status);
+router.patch('/account', authJwt, ctrl.patchAccount);
+router.patch('/account/email', authJwt, ctrl.patchAccountEmail);
 router.post('/composer', authJwt, ctrl.activateComposer);
 router.patch('/composer', authJwt, ctrl.patchComposer);
 router.delete('/composer', authJwt, ctrl.deactivateComposer);

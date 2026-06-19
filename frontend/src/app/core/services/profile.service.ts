@@ -8,6 +8,7 @@ export interface ProfileOption {
   type: ProfileType;
   label: string;
   description: string;
+  nickname?: string;
   profileDescription?: string;
   id?: number;
   canDeactivate?: boolean;
@@ -48,10 +49,22 @@ export class ProfileService {
     ).then((r) => r.data);
   }
 
-  updateDescription(type: ProfileType, description: string) {
+  updateProfile(type: ProfileType, payload: { nickname: string; description: string }) {
     return firstValueFrom(
-      this.http.patch<{ success: boolean; data: ProfileStatus }>(`${this.base}/${type}`, {
-        description,
+      this.http.patch<{ success: boolean; data: ProfileStatus }>(`${this.base}/${type}`, payload)
+    ).then((r) => r.data);
+  }
+
+  updateAccount(payload: { name: string }) {
+    return firstValueFrom(
+      this.http.patch<{ success: boolean; data: ProfileStatus }>(`${this.base}/account`, payload)
+    ).then((r) => r.data);
+  }
+
+  updateAccountEmail(idToken: string) {
+    return firstValueFrom(
+      this.http.patch<{ success: boolean; data: ProfileStatus }>(`${this.base}/account/email`, {
+        idToken,
       })
     ).then((r) => r.data);
   }

@@ -1,4 +1,4 @@
-import { getProfileStatus, activateProfile, deactivateProfile, updateProfileDescription } from './profile.service.js';
+import { getProfileStatus, activateProfile, deactivateProfile, updateProfile, updateAccount, updateAccountEmailWithGoogle } from './profile.service.js';
 import { ApiError } from '../../utils/ApiError.js';
 
 export async function status(req, res, next) {
@@ -7,6 +7,24 @@ export async function status(req, res, next) {
     res.json({ success: true, data });
   } catch (error) {
     next(error);
+  }
+}
+
+export async function patchAccount(req, res, next) {
+  try {
+    const data = await updateAccount(req, req.body);
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error instanceof ApiError ? error : new ApiError(500, 'Error al actualizar la cuenta'));
+  }
+}
+
+export async function patchAccountEmail(req, res, next) {
+  try {
+    const data = await updateAccountEmailWithGoogle(req, req.body?.idToken);
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error instanceof ApiError ? error : new ApiError(500, 'Error al actualizar el correo'));
   }
 }
 
@@ -66,27 +84,27 @@ export async function deactivateArtist(req, res, next) {
 
 export async function patchComposer(req, res, next) {
   try {
-    const data = await updateProfileDescription(req, 'composer', req.body?.description);
+    const data = await updateProfile(req, 'composer', req.body);
     res.json({ success: true, data });
   } catch (error) {
-    next(error instanceof ApiError ? error : new ApiError(500, 'Error al actualizar descripción'));
+    next(error instanceof ApiError ? error : new ApiError(500, 'Error al actualizar perfil'));
   }
 }
 
 export async function patchDirector(req, res, next) {
   try {
-    const data = await updateProfileDescription(req, 'director', req.body?.description);
+    const data = await updateProfile(req, 'director', req.body);
     res.json({ success: true, data });
   } catch (error) {
-    next(error instanceof ApiError ? error : new ApiError(500, 'Error al actualizar descripción'));
+    next(error instanceof ApiError ? error : new ApiError(500, 'Error al actualizar perfil'));
   }
 }
 
 export async function patchArtist(req, res, next) {
   try {
-    const data = await updateProfileDescription(req, 'artist', req.body?.description);
+    const data = await updateProfile(req, 'artist', req.body);
     res.json({ success: true, data });
   } catch (error) {
-    next(error instanceof ApiError ? error : new ApiError(500, 'Error al actualizar descripción'));
+    next(error instanceof ApiError ? error : new ApiError(500, 'Error al actualizar perfil'));
   }
 }

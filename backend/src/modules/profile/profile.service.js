@@ -1,4 +1,5 @@
 import {
+  UserApp,
   Composer,
   Director,
   Artist,
@@ -8,7 +9,7 @@ import {
 } from '../../models/index.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { setAuditUser } from '../../utils/audit.js';
-import { resolveUserProfiles, getCurrentUser } from '../auth/auth.service.js';
+import { resolveUserProfiles, getCurrentUser, verifyGoogleToken } from '../auth/auth.service.js';
 import sequelize from '../../config/database.js';
 
 export const SPECIAL_PROFILE_TYPES = ['composer', 'director', 'artist'];
@@ -115,6 +116,7 @@ export async function getProfileStatus(req) {
       active.push({
         ...meta,
         id: record[idField],
+        nickname: record.nickname,
         profileDescription: record.description ?? '',
         ...deactivation,
       });
@@ -173,7 +175,7 @@ export async function deactivateProfile(req, profileType) {
   return getProfileStatus(req);
 }
 
-export async function updateProfileDescription(req, profileType, description) {
+export async function updateProfile(req, profileType, payload = {}) {
   if (!SPECIAL_PROFILE_TYPES.includes(profileType)) {
     throw new ApiError(400, 'Tipo de perfil inválido');
   }
@@ -183,10 +185,87 @@ export async function updateProfileDescription(req, profileType, description) {
     throw new ApiError(404, `No tienes el perfil de ${PROFILE_META[profileType].label}`);
   }
 
+  const updates = {};
+
+  if (payload.nickname !== undefined) {
+    const nickname = String(payload.nickname ?? '').trim();
+    if (!nickname) {
+      throw new ApiError(400, 'El nombre artístico es obligatorio');
+    }
+    updates.nickname = nickname;
+  }
+
+  if (payload.description !== undefined) {
+    updates.description = String(payload.description ?? '').trim();
+  }
+
+  if (!Object.keys(updates).length) {
+    throw new ApiError(400, 'No hay cambios para guardar');
+  }
+
   await sequelize.transaction(async (transaction) => {
     await setAuditUser(req.user.email, transaction);
-    await record.update({ description: String(description ?? '').trim() }, { transaction });
+    await record.update(updates, { transaction });
+    await record.reload({ transaction });
   });
+
+  return getProfileStatus(req);
+}
+
+function normalizeEmail(email) {
+  return String(email ?? '').trim().toLowerCase();
+}
+
+export async function updateAccount(req, payload) {
+  const name = String(payload.name ?? '').trim();
+
+  if (!name) {
+    throw new ApiError(400, 'El nombre es obligatorio');
+  }
+
+  const user = req.user;
+  if (user.name === name) {
+    return getProfileStatus(req);
+  }
+
+  await sequelize.transaction(async (transaction) => {
+    await setAuditUser(user.email, transaction);
+    await user.update({ name }, { transaction });
+  });
+
+  await user.reload();
+  req.user = user;
+
+  return getProfileStatus(req);
+}
+
+export async function updateAccountEmailWithGoogle(req, idToken) {
+  if (!idToken) {
+    throw new ApiError(400, 'idToken es requerido');
+  }
+
+  const payload = await verifyGoogleToken(idToken);
+  const email = normalizeEmail(payload.email);
+  const user = req.user;
+
+  if (normalizeEmail(user.email) === email) {
+    return getProfileStatus(req);
+  }
+
+  const existing = await UserApp.findOne({ where: { email } });
+  if (existing && existing.id_user !== user.id_user) {
+    throw new ApiError(409, 'Ya existe una cuenta registrada con este correo de Google');
+  }
+
+  const name = payload.name?.trim() || user.name;
+
+  await sequelize.transaction(async (transaction) => {
+    await setAuditUser(user.email, transaction);
+    await user.update({ email, name }, { transaction });
+  });
+
+  await user.reload();
+  req.user = user;
 
   return getProfileStatus(req);
 }

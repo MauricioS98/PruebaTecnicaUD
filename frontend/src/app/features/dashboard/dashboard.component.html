@@ -113,6 +113,16 @@
     @if (isAdminView()) {
       <section class="dashboard__section dashboard__section--full">
         <div class="dashboard__section-head">
+          <h3>Catálogo de instrumentos</h3>
+          <a class="oa-btn oa-btn--secondary" routerLink="/admin/instruments">Gestionar</a>
+        </div>
+        <p class="dashboard__admin-hint oa-text-secondary">
+          Administra tipos de instrumento e instrumentos del sistema.
+        </p>
+      </section>
+
+      <section class="dashboard__section dashboard__section--full">
+        <div class="dashboard__section-head">
           <h3>Administradores</h3>
           <span class="oa-badge oa-badge--gold">Solo admin</span>
         </div>

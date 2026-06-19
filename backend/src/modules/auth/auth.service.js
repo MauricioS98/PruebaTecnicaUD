@@ -10,7 +10,7 @@ const googleClient = new OAuth2Client(authConfig.googleClientId);
 
 export const SPECIAL_PROFILE_TYPES = ['composer', 'director', 'artist'];
 
-async function verifyGoogleToken(idToken) {
+export async function verifyGoogleToken(idToken) {
   if (!idToken) {
     throw new ApiError(400, 'idToken es requerido');
   }

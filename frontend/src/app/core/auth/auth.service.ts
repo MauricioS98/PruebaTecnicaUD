@@ -11,11 +11,17 @@ interface GoogleSignInOptions {
   onError?: (message: string) => void;
 }
 
+interface GoogleEmailChangeOptions {
+  onError?: (message: string) => void;
+  onSuccess?: () => void;
+}
+
 declare const google: {
   accounts: {
     id: {
       initialize: (config: Record<string, unknown>) => void;
       renderButton: (element: HTMLElement, config: Record<string, unknown>) => void;
+      cancel: () => void;
     };
   };
 };
@@ -91,6 +97,48 @@ export class AuthService {
       text: mode === 'register' ? 'signup_with' : 'signin_with',
       shape: 'pill',
       width: 280,
+    });
+  }
+
+  initGoogleEmailChange(
+    buttonHost: HTMLElement,
+    onVerified: (idToken: string) => Promise<void>,
+    options: GoogleEmailChangeOptions = {}
+  ): void {
+    if (typeof google === 'undefined') return;
+
+    buttonHost.innerHTML = '';
+
+    try {
+      google.accounts.id.cancel();
+    } catch {
+      // Ignore if GIS was not initialized yet.
+    }
+
+    google.accounts.id.initialize({
+      client_id: environment.googleClientId,
+      callback: async (response: { credential: string }) => {
+        try {
+          await onVerified(response.credential);
+          options.onSuccess?.();
+        } catch (err: unknown) {
+          const message =
+            (err as { error?: { message?: string } })?.error?.message ??
+            'No se pudo verificar el correo con Google';
+          options.onError?.(message);
+        }
+      },
+      auto_select: false,
+      use_fedcm_for_prompt: true,
+    });
+
+    google.accounts.id.renderButton(buttonHost, {
+      type: 'standard',
+      theme: 'outline',
+      size: 'large',
+      text: 'continue_with',
+      shape: 'rectangular',
+      width: 320,
     });
   }
 

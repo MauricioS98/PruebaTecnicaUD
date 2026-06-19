@@ -12,10 +12,83 @@
     @if (status(); as data) {
     <section class="oa-card profile__base">
       <div class="profile__base-head">
-        <h3>{{ auth.currentUser()?.name }}</h3>
-        <span class="oa-badge oa-badge--gold">Oyente</span>
+        @if (editingName()) {
+          <h3 class="oa-font-display">Editar nombre</h3>
+        } @else if (changingEmail()) {
+          <h3 class="oa-font-display">Cambiar correo</h3>
+        } @else {
+          <h3>{{ auth.currentUser()?.name }}</h3>
+        }
+        <span class="oa-badge oa-badge--gold">
+          {{ status()?.profileLabel ?? 'Oyente' }}
+        </span>
       </div>
-      <p class="oa-text-secondary">{{ auth.currentUser()?.email }}</p>
+
+      @if (editingName()) {
+        <div class="profile__account-form">
+          <div class="profile__account-field">
+            <label class="oa-label" for="account-name">Nombre</label>
+            <input
+              id="account-name"
+              class="oa-input"
+              type="text"
+              [ngModel]="accountName()"
+              (ngModelChange)="accountName.set($event)"
+            />
+          </div>
+          <div class="profile__bio-actions">
+            <button
+              class="oa-btn oa-btn--primary"
+              type="button"
+              [disabled]="savingName()"
+              (click)="saveName()"
+            >
+              {{ savingName() ? 'Guardando...' : 'Guardar' }}
+            </button>
+            <button
+              class="oa-btn oa-btn--secondary"
+              type="button"
+              [disabled]="savingName()"
+              (click)="cancelEditName()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      } @else if (changingEmail()) {
+        <div class="profile__email-change">
+          <p class="oa-text-secondary">
+            Correo actual: <strong>{{ auth.currentUser()?.email }}</strong>
+          </p>
+          <p class="profile__email-hint oa-text-muted">
+            Inicia sesión con la cuenta de Google que quieras usar. Verificaremos el correo
+            directamente con Google, igual que en el registro.
+          </p>
+          <div #googleEmailBtn class="profile__google-btn"></div>
+          @if (verifyingEmail()) {
+            <p class="oa-text-muted">Verificando correo con Google...</p>
+          }
+          <button
+            class="oa-btn oa-btn--secondary profile__email-cancel"
+            type="button"
+            [disabled]="verifyingEmail()"
+            (click)="cancelChangeEmail()"
+          >
+            Cancelar
+          </button>
+        </div>
+      } @else {
+        <p class="oa-text-secondary">{{ auth.currentUser()?.email }}</p>
+        <div class="profile__account-actions">
+          <button class="oa-btn oa-btn--ghost profile__account-edit" type="button" (click)="startEditName()">
+            Editar nombre
+          </button>
+          <button class="oa-btn oa-btn--ghost profile__account-edit" type="button" (click)="startChangeEmail()">
+            Cambiar correo con Google
+          </button>
+        </div>
+      }
+
       <p class="profile__hint oa-text-muted">
         Todos los usuarios empiezan como <strong>Oyente</strong> (solo consulta).
         Desde aquí puedes activar perfiles adicionales cuando lo necesites.
@@ -33,6 +106,16 @@
               <p class="profile__role-hint oa-text-muted">{{ item.description }}</p>
 
               @if (editingType() === item.type) {
+                <label class="oa-label" [for]="'profile-nickname-' + item.type">Nombre artístico</label>
+                <input
+                  [id]="'profile-nickname-' + item.type"
+                  class="oa-input"
+                  type="text"
+                  [name]="'profile-nickname-' + item.type"
+                  placeholder="Tu nombre artístico en este rol"
+                  [ngModel]="editNicknameDraft()"
+                  (ngModelChange)="editNicknameDraft.set($event)"
+                />
                 <label class="oa-label" [for]="'profile-bio-' + item.type">Descripción pública</label>
                 <textarea
                   [id]="'profile-bio-' + item.type"
@@ -40,31 +123,31 @@
                   rows="3"
                   [name]="'profile-bio-' + item.type"
                   placeholder="Escribe una breve descripción sobre ti..."
-                  [ngModel]="editDraft()"
-                  (ngModelChange)="editDraft.set($event)"
+                  [ngModel]="editDescriptionDraft()"
+                  (ngModelChange)="editDescriptionDraft.set($event)"
                 ></textarea>
                 <div class="profile__bio-actions">
                   <button
                     class="oa-btn oa-btn--primary"
                     type="button"
-                    [disabled]="savingDescription() === item.type"
-                    (click)="saveDescription(item.type)"
+                    [disabled]="savingProfile() === item.type"
+                    (click)="saveProfile(item.type)"
                   >
-                    {{
-                      savingDescription() === item.type ? 'Guardando...' : 'Guardar'
-                    }}
+                    {{ savingProfile() === item.type ? 'Guardando...' : 'Guardar' }}
                   </button>
                   <button
                     class="oa-btn oa-btn--secondary"
                     type="button"
-                    [disabled]="savingDescription() === item.type"
-                    (click)="cancelEditDescription()"
+                    [disabled]="savingProfile() === item.type"
+                    (click)="cancelEditProfile()"
                   >
                     Cancelar
                   </button>
                 </div>
               } @else {
                 <div class="profile__bio">
+                  <span class="oa-label">Nombre artístico</span>
+                  <p class="profile__nickname">{{ item.nickname }}</p>
                   <span class="oa-label">Descripción pública</span>
                   @if (item.profileDescription) {
                     <p class="oa-text-secondary profile__bio-text">{{ item.profileDescription }}</p>
@@ -74,9 +157,9 @@
                   <button
                     class="oa-btn oa-btn--ghost profile__bio-edit"
                     type="button"
-                    (click)="startEditDescription(item)"
+                    (click)="startEditProfile(item)"
                   >
-                    Editar descripción
+                    Editar perfil
                   </button>
                 </div>
               }
