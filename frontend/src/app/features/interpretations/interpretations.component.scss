@@ -13,17 +13,9 @@
     box-shadow: 0 0 0 1px rgba($color-gold-muted, 0.15);
   }
 
-  &__select {
-    display: flex;
-    align-items: flex-start;
-    gap: $space-3;
+  &__info {
     flex: 1;
     min-width: 0;
-
-    input[type='checkbox'] {
-      margin-top: $space-1;
-      accent-color: $color-gold-muted;
-    }
   }
 
   &__badges {
@@ -31,6 +23,47 @@
     align-items: center;
     gap: $space-2;
     flex-shrink: 0;
+  }
+
+  &__media-actions {
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+  }
+
+  &__queue {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: $radius-full;
+    background: rgba(255, 255, 255, 0.04);
+    color: $color-text-secondary;
+    cursor: pointer;
+    transition:
+      color $transition-fast,
+      background $transition-fast,
+      border-color $transition-fast,
+      transform $transition-fast;
+
+    &:hover {
+      color: $color-text-primary;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    &--active {
+      color: $color-gold-muted;
+      background: rgba($color-gold-muted, 0.14);
+      border-color: rgba($color-gold-muted, 0.35);
+    }
+  }
+
+  &__queue-icon {
+    width: 16px;
+    height: 16px;
   }
 
   &__play {
@@ -51,6 +84,54 @@
 
   &__no-audio {
     font-size: $text-xs;
+  }
+
+  &__artists-toggle {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+
+    &:hover {
+      .oa-label,
+      .interp-item__artists-chevron {
+        color: $color-text-primary;
+      }
+    }
+
+    .oa-label {
+      margin-bottom: 0;
+    }
+
+    &--expanded .interp-item__artists-chevron {
+      transform: rotate(0deg);
+    }
+  }
+
+  &__artists-count {
+    font-size: $text-xs;
+    color: $color-text-muted;
+  }
+
+  &__artists-chevron {
+    margin-left: auto;
+    font-size: $text-sm;
+    color: $color-text-muted;
+    transform: rotate(-90deg);
+    transition: transform $transition-fast, color $transition-fast;
+  }
+
+  &__artists-body {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+    margin-top: $space-3;
   }
 
   &__manage {

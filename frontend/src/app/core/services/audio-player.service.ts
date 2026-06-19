@@ -14,9 +14,11 @@ export class AudioPlayerService {
   private suppressEnded = false;
 
   readonly queue = signal<PlaybackTrack[]>([]);
+  readonly playlist = signal<PlaybackTrack[]>([]);
   readonly currentIndex = signal(-1);
   readonly activeTrack = signal<PlaybackTrack | null>(null);
   readonly isOpen = signal(false);
+  readonly queuePanelOpen = signal(false);
   readonly isPlaying = signal(false);
   readonly currentTime = signal(0);
   readonly duration = signal(0);
@@ -30,7 +32,20 @@ export class AudioPlayerService {
     return this.activeTrack();
   });
 
-  readonly hasActivePlayer = computed(() => this.isOpen());
+  readonly hasActivePlayer = computed(() => this.isOpen() || this.playlist().length > 0);
+
+  readonly playlistCount = computed(() => this.playlist().length);
+
+  readonly panelTracks = computed(() => {
+    if (this.isOpen() && this.queue().length > 0) {
+      return this.queue();
+    }
+    return this.playlist();
+  });
+
+  readonly panelTitle = computed(() =>
+    this.isOpen() && this.queue().length > 0 ? 'Reproduciendo' : 'Fila de reproducción'
+  );
 
   readonly canGoPrevious = computed(() => {
     if (this.currentIndex() > 0) return true;
@@ -83,6 +98,102 @@ export class AudioPlayerService {
     this.playTracks([track], 0);
   }
 
+  togglePlaylist(track: PlaybackTrack): void {
+    const exists = this.playlist().some((t) => t.id === track.id);
+    if (exists) {
+      this.removeFromPlaylist(track.id);
+      return;
+    }
+    this.playlist.update((list) => [...list, track]);
+  }
+
+  isInPlaylist(id: number): boolean {
+    return this.playlist().some((t) => t.id === id);
+  }
+
+  removeFromPlaylist(id: number): void {
+    this.removeTrack(id);
+  }
+
+  removeTrack(id: number): void {
+    this.playlist.update((list) => list.filter((t) => t.id !== id));
+
+    const queue = this.queue();
+    const removeIndex = queue.findIndex((t) => t.id === id);
+    if (removeIndex < 0) {
+      this.closePanelIfEmpty();
+      return;
+    }
+
+    const wasPlaying = this.isOpen();
+    const wasCurrent = this.isCurrentTrack(id);
+    const currentIdx = this.currentIndex();
+    const newQueue = queue.filter((t) => t.id !== id);
+
+    if (!newQueue.length) {
+      this.queue.set([]);
+      if (wasPlaying) {
+        this.stop();
+      } else {
+        this.closePanelIfEmpty();
+      }
+      return;
+    }
+
+    this.queue.set(newQueue);
+
+    if (!wasPlaying) {
+      this.closePanelIfEmpty();
+      return;
+    }
+
+    if (wasCurrent) {
+      const nextIndex = Math.min(removeIndex, newQueue.length - 1);
+      void this.loadAndPlay(nextIndex);
+      return;
+    }
+
+    if (removeIndex < currentIdx) {
+      this.currentIndex.set(currentIdx - 1);
+    }
+  }
+
+  private closePanelIfEmpty(): void {
+    if (!this.playlist().length && !this.isOpen()) {
+      this.queuePanelOpen.set(false);
+    }
+  }
+
+  clearPlaylist(): void {
+    this.playlist.set([]);
+    if (!this.isOpen()) {
+      this.queuePanelOpen.set(false);
+    }
+  }
+
+  playPlaylist(): void {
+    const tracks = this.playlist();
+    if (!tracks.length) return;
+    this.playTracks(tracks, 0);
+  }
+
+  playAtIndex(index: number): void {
+    if (index < 0 || index >= this.queue().length) return;
+    void this.loadAndPlay(index);
+  }
+
+  toggleQueuePanel(): void {
+    this.queuePanelOpen.update((open) => !open);
+  }
+
+  openQueuePanel(): void {
+    this.queuePanelOpen.set(true);
+  }
+
+  closeQueuePanel(): void {
+    this.queuePanelOpen.set(false);
+  }
+
   togglePlay(): void {
     if (!this.currentTrack()) return;
 
@@ -128,6 +239,9 @@ export class AudioPlayerService {
     this.currentTime.set(0);
     this.duration.set(0);
     this.queue.set([]);
+    if (!this.playlist().length) {
+      this.queuePanelOpen.set(false);
+    }
   }
 
   isCurrentTrack(id: number): boolean {

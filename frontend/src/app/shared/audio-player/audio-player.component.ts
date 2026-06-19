@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { AudioPlayerService } from '../../core/services/audio-player.service';
+import { AudioPlayerService, PlaybackTrack } from '../../core/services/audio-player.service';
 
 @Component({
   selector: 'app-audio-player',
@@ -20,5 +20,18 @@ export class AudioPlayerComponent {
   onSeek(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.player.seekByPercent(Number(input.value));
+  }
+
+  onPlayTrack(track: PlaybackTrack, index: number): void {
+    if (this.player.isOpen() && this.player.queue().length > 0) {
+      if (this.player.isCurrentTrack(track.id)) {
+        this.player.togglePlay();
+        return;
+      }
+      this.player.playAtIndex(index);
+      return;
+    }
+
+    this.player.playTracks(this.player.playlist(), index);
   }
 }

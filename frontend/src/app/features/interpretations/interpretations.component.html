@@ -5,9 +5,12 @@
       <h2 class="oa-font-display">Interpretaciones</h2>
     </div>
     <div class="interp-page__actions">
-      @if (selectedPlayableCount() > 0) {
+      @if (playlistCount() > 0) {
+        <button class="oa-btn oa-btn--secondary" type="button" (click)="openPlaylist()">
+          Ver fila ({{ playlistCount() }})
+        </button>
         <button class="oa-btn oa-btn--secondary" type="button" (click)="playSelected()">
-          Reproducir selección ({{ selectedPlayableCount() }})
+          Reproducir fila
         </button>
       }
       @if (auth.isDirector()) {
@@ -78,21 +81,12 @@
             [class.interp-item--playing]="player.isCurrentTrack(item.id_interpretation)"
           >
             <div class="interp-item__head">
-              <div class="interp-item__select">
-                @if (hasAudio(item)) {
-                  <input
-                    type="checkbox"
-                    [checked]="isSelected(item.id_interpretation)"
-                    (change)="toggleSelect(item.id_interpretation)"
-                  />
-                }
-                <div>
-                  <h3 class="interp-item__title">{{ item.work?.name ?? 'Obra desconocida' }}</h3>
-                  <p class="interp-item__meta">
-                    {{ item.director?.nickname ?? 'Director no registrado' }}
-                    · {{ item.load_file_date }}
-                  </p>
-                </div>
+              <div class="interp-item__info">
+                <h3 class="interp-item__title">{{ item.work?.name ?? 'Obra desconocida' }}</h3>
+                <p class="interp-item__meta">
+                  {{ item.director?.nickname ?? 'Director no registrado' }}
+                  · {{ item.load_file_date }}
+                </p>
               </div>
               <div class="interp-item__badges">
                 @if (isLegacy(item)) {
@@ -101,14 +95,47 @@
                   <span class="oa-badge oa-badge--blue">{{ item.type_interpretation?.name }}</span>
                 }
                 @if (hasAudio(item)) {
-                  <button
-                    type="button"
-                    class="interp-item__play"
-                    (click)="playItem(item)"
-                    [title]="isPlayingItem(item) ? 'Pausar' : 'Reproducir'"
-                  >
-                    {{ player.isCurrentTrack(item.id_interpretation) && player.isPlaying() ? '⏸' : '▶' }}
-                  </button>
+                  <div class="interp-item__media-actions">
+                    <button
+                      type="button"
+                      class="interp-item__queue"
+                      [class.interp-item__queue--active]="isSelected(item.id_interpretation)"
+                      [attr.aria-pressed]="isSelected(item.id_interpretation)"
+                      [title]="isSelected(item.id_interpretation) ? 'Quitar de la fila' : 'Agregar a la fila de reproducción'"
+                      (click)="toggleSelect(item)"
+                    >
+                      @if (isSelected(item.id_interpretation)) {
+                        <svg class="interp-item__queue-icon" viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.25"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M5 12l5 5L19 7"
+                          />
+                        </svg>
+                      } @else {
+                        <svg class="interp-item__queue-icon" viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.25"
+                            stroke-linecap="round"
+                            d="M12 5v14M5 12h14"
+                          />
+                        </svg>
+                      }
+                    </button>
+                    <button
+                      type="button"
+                      class="interp-item__play"
+                      (click)="playItem(item)"
+                      [title]="isPlayingItem(item) ? 'Pausar' : 'Reproducir'"
+                    >
+                      {{ player.isCurrentTrack(item.id_interpretation) && player.isPlaying() ? '⏸' : '▶' }}
+                    </button>
+                  </div>
                 } @else {
                   <span class="oa-text-muted interp-item__no-audio">Sin audio</span>
                 }
@@ -117,11 +144,25 @@
 
             @if (item.interpretation_artists?.length) {
               <div class="interp-item__artists">
-                <span class="oa-label">Intérpretes</span>
-                @for (row of item.interpretation_artists; track row.id_artist) {
-                  <div class="interp-item__artist-row">
-                    <span>{{ row.artist?.nickname ?? 'Artista' }}</span>
-                    <span class="oa-text-muted">{{ row.instrument?.name ?? 'Sin instrumento' }}</span>
+                <button
+                  type="button"
+                  class="interp-item__artists-toggle"
+                  [class.interp-item__artists-toggle--expanded]="isArtistsExpanded(item.id_interpretation)"
+                  [attr.aria-expanded]="isArtistsExpanded(item.id_interpretation)"
+                  (click)="toggleArtistsExpanded(item.id_interpretation)"
+                >
+                  <span class="oa-label">Intérpretes</span>
+                  <span class="interp-item__artists-count">({{ item.interpretation_artists!.length }})</span>
+                  <span class="interp-item__artists-chevron" aria-hidden="true">▾</span>
+                </button>
+                @if (isArtistsExpanded(item.id_interpretation)) {
+                  <div class="interp-item__artists-body">
+                    @for (row of item.interpretation_artists; track row.id_artist) {
+                      <div class="interp-item__artist-row">
+                        <span>{{ row.artist?.nickname ?? 'Artista' }}</span>
+                        <span class="oa-text-muted">{{ row.instrument?.name ?? 'Sin instrumento' }}</span>
+                      </div>
+                    }
                   </div>
                 }
               </div>

@@ -1,8 +1,80 @@
 @if (player.hasActivePlayer()) {
+  @if (player.queuePanelOpen()) {
+    <aside class="audio-player__queue-panel" role="dialog" aria-label="Lista de reproducción">
+      <header class="audio-player__queue-head">
+        <div>
+          <p class="audio-player__queue-eyebrow">{{ player.panelTitle() }}</p>
+          <h3 class="audio-player__queue-title">{{ player.panelTracks().length }} pistas</h3>
+        </div>
+        <div class="audio-player__queue-head-actions">
+          @if (player.playlistCount() > 0 && !player.isOpen()) {
+            <button type="button" class="oa-btn oa-btn--secondary" (click)="player.playPlaylist()">
+              Reproducir
+            </button>
+          }
+          <button
+            type="button"
+            class="oa-btn oa-btn--ghost audio-player__queue-close"
+            (click)="player.closeQueuePanel()"
+            aria-label="Cerrar lista"
+          >
+            ✕
+          </button>
+        </div>
+      </header>
+
+      @if (player.panelTracks().length) {
+        <ul class="audio-player__queue-list">
+          @for (track of player.panelTracks(); track track.id; let i = $index) {
+            <li
+              class="audio-player__queue-item"
+              [class.audio-player__queue-item--active]="player.isCurrentTrack(track.id)"
+            >
+              <button
+                type="button"
+                class="audio-player__queue-play"
+                (click)="onPlayTrack(track, i)"
+                [title]="player.isCurrentTrack(track.id) ? 'Reproducir' : 'Reproducir esta pista'"
+              >
+                @if (player.isCurrentTrack(track.id) && player.isPlaying()) {
+                  ⏸
+                } @else {
+                  ▶
+                }
+              </button>
+              <div class="audio-player__queue-info">
+                <strong>{{ track.title }}</strong>
+                <span class="oa-text-muted">{{ track.subtitle }}</span>
+              </div>
+              <button
+                type="button"
+                class="audio-player__queue-remove"
+                (click)="$event.stopPropagation(); player.removeTrack(track.id)"
+                title="Quitar de la fila"
+                aria-label="Quitar de la fila"
+              >
+                ✕
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="audio-player__queue-empty oa-text-muted">
+          Usa el botón + en una interpretación para agregarla aquí.
+        </p>
+      }
+    </aside>
+  }
+
   <footer class="audio-player">
     <div class="audio-player__track">
-      <strong>{{ player.currentTrack()?.title }}</strong>
-      <span class="oa-text-muted">{{ player.currentTrack()?.subtitle }}</span>
+      @if (player.isOpen()) {
+        <strong>{{ player.currentTrack()?.title }}</strong>
+        <span class="oa-text-muted">{{ player.currentTrack()?.subtitle }}</span>
+      } @else {
+        <strong>Fila de reproducción</strong>
+        <span class="oa-text-muted">{{ player.playlistCount() }} pistas en cola</span>
+      }
     </div>
 
     <div class="audio-player__center">
@@ -10,42 +82,67 @@
         <button
           type="button"
           class="audio-player__btn"
-          [disabled]="!player.canGoPrevious()"
-          (click)="$event.stopPropagation(); player.previous()"
-          title="Anterior"
+          [class.audio-player__btn--active]="player.queuePanelOpen()"
+          (click)="player.toggleQueuePanel()"
+          [title]="player.queuePanelOpen() ? 'Ocultar fila' : 'Ver fila de reproducción'"
         >
-          ⏮
+          ☰
+          @if (player.panelTracks().length) {
+            <span class="audio-player__queue-badge">{{ player.panelTracks().length }}</span>
+          }
         </button>
-        <button
-          type="button"
-          class="audio-player__btn audio-player__btn--main"
-          (click)="$event.stopPropagation(); player.togglePlay()"
-        >
-          {{ player.isPlaying() ? '⏸' : '▶' }}
-        </button>
-        <button
-          type="button"
-          class="audio-player__btn"
-          [disabled]="!player.canGoNext()"
-          (click)="$event.stopPropagation(); player.next()"
-          title="Siguiente"
-        >
-          ⏭
-        </button>
+        @if (player.isOpen()) {
+          <button
+            type="button"
+            class="audio-player__btn"
+            [disabled]="!player.canGoPrevious()"
+            (click)="$event.stopPropagation(); player.previous()"
+            title="Anterior"
+          >
+            ⏮
+          </button>
+          <button
+            type="button"
+            class="audio-player__btn audio-player__btn--main"
+            (click)="$event.stopPropagation(); player.togglePlay()"
+          >
+            {{ player.isPlaying() ? '⏸' : '▶' }}
+          </button>
+          <button
+            type="button"
+            class="audio-player__btn"
+            [disabled]="!player.canGoNext()"
+            (click)="$event.stopPropagation(); player.next()"
+            title="Siguiente"
+          >
+            ⏭
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="audio-player__btn audio-player__btn--main"
+            (click)="player.playPlaylist()"
+            title="Reproducir fila"
+          >
+            ▶
+          </button>
+        }
       </div>
 
-      <div class="audio-player__progress">
-        <span class="audio-player__time">{{ formatTime(player.currentTime()) }}</span>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          step="0.1"
-          [value]="player.progress()"
-          (input)="onSeek($event)"
-        />
-        <span class="audio-player__time">{{ formatTime(player.duration()) }}</span>
-      </div>
+      @if (player.isOpen()) {
+        <div class="audio-player__progress">
+          <span class="audio-player__time">{{ formatTime(player.currentTime()) }}</span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="0.1"
+            [value]="player.progress()"
+            (input)="onSeek($event)"
+          />
+          <span class="audio-player__time">{{ formatTime(player.duration()) }}</span>
+        </div>
+      }
     </div>
   </footer>
 }

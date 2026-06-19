@@ -40,7 +40,7 @@ export class InterpretationsComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly search = signal('');
   readonly filter = signal<InterpretationFilter>('all');
-  readonly selectedIds = signal<number[]>([]);
+  readonly expandedArtistIds = signal<ReadonlySet<number>>(new Set());
 
   readonly showForm = signal(false);
   readonly editingInterpretation = signal<Interpretation | null>(null);
@@ -114,12 +114,7 @@ export class InterpretationsComponent implements OnInit {
 
   readonly playableTrackCount = computed(() => this.playableTracks().length);
 
-  readonly selectedPlayableCount = computed(() =>
-    this.selectedIds().filter((id) => {
-      const item = this.interpretations().find((i) => i.id_interpretation === id);
-      return item && this.hasAudio(item);
-    }).length
-  );
+  readonly playlistCount = computed(() => this.player.playlistCount());
 
   async ngOnInit(): Promise<void> {
     await this.loadInterpretations();
@@ -158,18 +153,37 @@ export class InterpretationsComponent implements OnInit {
   }
 
   isSelected(id: number): boolean {
-    return this.selectedIds().includes(id);
+    return this.player.isInPlaylist(id);
   }
 
   isPlayingItem(item: Interpretation): boolean {
     return this.player.isCurrentTrack(item.id_interpretation) && this.player.isPlaying();
   }
 
-  toggleSelect(id: number): void {
-    const current = this.selectedIds();
-    this.selectedIds.set(
-      current.includes(id) ? current.filter((x) => x !== id) : [...current, id]
-    );
+  toggleSelect(item: Interpretation): void {
+    const track = this.toTrack(item);
+    if (!track) return;
+    this.player.togglePlaylist(track);
+  }
+
+  openPlaylist(): void {
+    this.player.openQueuePanel();
+  }
+
+  isArtistsExpanded(id: number): boolean {
+    return this.expandedArtistIds().has(id);
+  }
+
+  toggleArtistsExpanded(id: number): void {
+    this.expandedArtistIds.update((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   }
 
   playItem(item: Interpretation): void {
@@ -199,12 +213,7 @@ export class InterpretationsComponent implements OnInit {
   }
 
   playSelected(): void {
-    const selected = new Set(this.selectedIds());
-    const tracks = this.playableTracks().filter((t) => selected.has(t.id));
-
-    if (tracks.length) {
-      this.player.playTracks(tracks, 0);
-    }
+    this.player.playPlaylist();
   }
 
   async loadInterpretations(): Promise<void> {
@@ -422,7 +431,7 @@ export class InterpretationsComponent implements OnInit {
         this.player.stop();
       }
       await firstValueFrom(this.api.deleteInterpretation(item.id_interpretation));
-      this.selectedIds.update((ids) => ids.filter((id) => id !== item.id_interpretation));
+      this.player.removeFromPlaylist(item.id_interpretation);
       await this.loadInterpretations();
     } catch (err: unknown) {
       const message =
