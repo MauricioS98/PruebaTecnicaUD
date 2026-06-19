@@ -118,6 +118,26 @@
             } @else {
               <p class="oa-text-muted">Sin intérpretes registrados.</p>
             }
+
+            @if (isOwnInterpretation(item)) {
+              <div class="interp-item__manage">
+                <button
+                  type="button"
+                  class="oa-btn oa-btn--ghost interp-item__manage-btn"
+                  (click)="openEditForm(item)"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  class="oa-btn oa-btn--ghost interp-item__manage-btn interp-item__manage-btn--danger"
+                  [disabled]="deletingId() === item.id_interpretation"
+                  (click)="deleteInterpretation(item)"
+                >
+                  {{ deletingId() === item.id_interpretation ? 'Eliminando...' : 'Eliminar' }}
+                </button>
+              </div>
+            }
           </article>
         }
       </div>
@@ -137,7 +157,9 @@
       <header class="interp-form__head">
         <div>
           <p class="catalog-page__eyebrow">Director</p>
-          <h3 class="oa-font-display">Registrar interpretación</h3>
+          <h3 class="oa-font-display">
+            {{ isEditing() ? 'Editar interpretación' : 'Registrar interpretación' }}
+          </h3>
         </div>
         <button class="oa-btn oa-btn--ghost" type="button" (click)="closeForm()">✕</button>
       </header>
@@ -196,6 +218,11 @@
         />
         @if (audioFileName()) {
           <p class="interp-form__hint oa-text-muted">{{ audioFileName() }}</p>
+        } @else if (existingAudioUrl()) {
+          <p class="interp-form__hint oa-text-muted">
+            Audio actual:
+            <a [href]="existingAudioUrl()!" target="_blank" rel="noopener">Escuchar</a>
+          </p>
         }
       </div>
 
@@ -252,7 +279,7 @@
           [disabled]="saving()"
           (click)="submitInterpretation()"
         >
-          {{ saving() ? 'Guardando...' : 'Registrar interpretación' }}
+          {{ saving() ? 'Guardando...' : (isEditing() ? 'Guardar cambios' : 'Registrar interpretación') }}
         </button>
       </div>
     </div>

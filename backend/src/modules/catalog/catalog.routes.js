@@ -51,6 +51,14 @@ router.post(
   handleAudioUploadError,
   ctrl.createInterpretation
 );
-router.delete('/interpretations/:id', authJwt, requireWriteAccess, ctrl.deleteInterpretation);
+router.put(
+  '/interpretations/:id',
+  authJwt,
+  requireDirectorProfile,
+  uploadInterpretationAudio,
+  handleAudioUploadError,
+  ctrl.updateInterpretation
+);
+router.delete('/interpretations/:id', authJwt, requireDirectorProfile, ctrl.deleteInterpretation);
 
 export default router;

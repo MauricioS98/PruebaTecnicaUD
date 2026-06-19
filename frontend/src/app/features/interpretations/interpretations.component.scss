@@ -52,6 +52,28 @@
   &__no-audio {
     font-size: $text-xs;
   }
+
+  &__manage {
+    display: flex;
+    gap: $space-2;
+    margin-top: $space-4;
+    padding-top: $space-4;
+    border-top: 1px solid $color-border;
+  }
+
+  &__manage-btn {
+    padding: $space-1 $space-3;
+    font-size: $text-xs;
+
+    &--danger {
+      color: #f0a0a0;
+
+      &:hover:not(:disabled) {
+        color: #ffb8b8;
+        background: rgba(220, 80, 80, 0.1);
+      }
+    }
+  }
 }
 
 .interp-form {

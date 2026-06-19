@@ -314,6 +314,24 @@ function validateInterpretationPayload(payload, type) {
   }
 }
 
+async function assertInterpretationOwnership(id, userId, transaction = null) {
+  const userDirector = await Director.findOne({ where: { id_user: userId }, transaction });
+  if (!userDirector) {
+    throw new ApiError(403, 'Se requiere el perfil de Director');
+  }
+
+  const interpretation = await Interpretation.findByPk(id, { transaction });
+  if (!interpretation) {
+    throw new ApiError(404, 'Interpretación no encontrada');
+  }
+
+  if (interpretation.id_director !== userDirector.id_director) {
+    throw new ApiError(403, 'Solo puedes gestionar tus propias interpretaciones');
+  }
+
+  return { userDirector, interpretation };
+}
+
 export async function createInterpretation(payload, user) {
   const userDirector = await Director.findOne({ where: { id_user: user.id_user } });
   if (!userDirector) {
@@ -364,11 +382,78 @@ export async function createInterpretation(payload, user) {
   });
 }
 
+export async function updateInterpretation(id, payload, user) {
+  return sequelize.transaction(async (transaction) => {
+    await setAuditUser(user.email, transaction);
+
+    const { interpretation } = await assertInterpretationOwnership(id, user.id_user, transaction);
+    const previousAudio = interpretation.audio_mp3_url;
+
+    const nextTypeId =
+      payload.id_type_interpretation !== undefined
+        ? payload.id_type_interpretation
+        : interpretation.id_type_interpretation;
+
+    let type = null;
+    if (nextTypeId) {
+      type = await TypeInterpretation.findByPk(nextTypeId, { transaction });
+      if (!type) throw new ApiError(404, 'Tipo de interpretación no encontrado');
+    }
+
+    if (payload.artists) {
+      validateInterpretationPayload(payload, type);
+    }
+
+    const nextAudioUrl =
+      payload.audio_mp3_url !== undefined ? payload.audio_mp3_url : interpretation.audio_mp3_url;
+
+    if (!nextAudioUrl) {
+      throw new ApiError(400, 'La interpretación debe tener un archivo MP3');
+    }
+
+    await interpretation.update(
+      {
+        id_work: payload.id_work ?? interpretation.id_work,
+        id_type_interpretation: nextTypeId,
+        load_file_date: payload.load_file_date ?? interpretation.load_file_date,
+        audio_mp3_url: nextAudioUrl,
+      },
+      { transaction }
+    );
+
+    if (payload.artists) {
+      await InterpretationArtist.destroy({ where: { id_interpretation: id }, transaction });
+      if (payload.artists.length) {
+        await InterpretationArtist.bulkCreate(
+          payload.artists.map((a) => ({
+            id_interpretation: id,
+            id_artist: a.id_artist,
+            id_instrument: a.id_instrument ?? null,
+          })),
+          { transaction }
+        );
+      }
+    }
+
+    if (
+      payload.audio_mp3_url &&
+      previousAudio &&
+      previousAudio !== payload.audio_mp3_url
+    ) {
+      await deleteAudioFile(previousAudio);
+    }
+
+    return Interpretation.findByPk(id, {
+      include: interpretationIncludes,
+      transaction,
+    });
+  });
+}
+
 export async function deleteInterpretation(id, user) {
   return sequelize.transaction(async (transaction) => {
     await setAuditUser(user.email, transaction);
-    const interpretation = await Interpretation.findByPk(id, { transaction });
-    if (!interpretation) throw new ApiError(404, 'Interpretación no encontrada');
+    const { interpretation } = await assertInterpretationOwnership(id, user.id_user, transaction);
     const audioUrl = interpretation.audio_mp3_url;
     await interpretation.destroy({ transaction });
     await deleteAudioFile(audioUrl);

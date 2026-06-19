@@ -30,6 +30,19 @@ export class ApiService {
     );
   }
 
+  updateInterpretation(id: number, formData: FormData) {
+    return this.http.put<{ success: boolean; data: Interpretation }>(
+      `${this.base}/interpretations/${id}`,
+      formData
+    );
+  }
+
+  deleteInterpretation(id: number) {
+    return this.http.delete<{ success: boolean; data: { deleted: boolean } }>(
+      `${this.base}/interpretations/${id}`
+    );
+  }
+
   updateWork(id: number, formData: FormData) {
     return this.http.put<{ success: boolean; data: Work }>(`${this.base}/works/${id}`, formData);
   }

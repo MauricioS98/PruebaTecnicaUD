@@ -41,7 +41,9 @@ export class InterpretationsComponent implements OnInit {
   readonly selectedIds = signal<number[]>([]);
 
   readonly showForm = signal(false);
+  readonly editingInterpretation = signal<Interpretation | null>(null);
   readonly saving = signal(false);
+  readonly deletingId = signal<number | null>(null);
   readonly formError = signal<string | null>(null);
   readonly works = signal<Work[]>([]);
   readonly types = signal<TypeInterpretation[]>([]);
@@ -54,6 +56,10 @@ export class InterpretationsComponent implements OnInit {
   readonly artistRows = signal<ArtistFormRow[]>([]);
   readonly audioFile = signal<File | null>(null);
   readonly audioFileName = signal<string | null>(null);
+  readonly existingAudioUrl = signal<string | null>(null);
+
+  readonly myDirectorId = computed(() => this.auth.directorProfileId());
+  readonly isEditing = computed(() => !!this.editingInterpretation());
 
   readonly filteredInterpretations = computed(() => {
     const term = this.search().trim().toLowerCase();
@@ -116,6 +122,12 @@ export class InterpretationsComponent implements OnInit {
 
   isLegacy(item: Interpretation): boolean {
     return !item.id_type_interpretation;
+  }
+
+  isOwnInterpretation(item: Interpretation): boolean {
+    const myId = this.myDirectorId();
+    if (!myId) return false;
+    return item.id_director === myId || item.director?.id_director === myId;
   }
 
   isSelected(id: number): boolean {
@@ -190,36 +202,70 @@ export class InterpretationsComponent implements OnInit {
 
   async openForm(): Promise<void> {
     this.formError.set(null);
+    this.editingInterpretation.set(null);
     this.formWorkId.set(null);
     this.formTypeId.set(null);
     this.formDate.set(new Date().toISOString().slice(0, 10));
     this.artistRows.set([{ id_artist: 0, id_instrument: null }]);
     this.audioFile.set(null);
     this.audioFileName.set(null);
+    this.existingAudioUrl.set(null);
 
     try {
-      const [worksRes, catalogsRes, artistsRes] = await Promise.all([
-        firstValueFrom(this.api.getWorks()),
-        firstValueFrom(this.api.getCatalogs()),
-        firstValueFrom(this.api.getArtists()),
-      ]);
-      this.works.set(worksRes.data ?? []);
-      this.types.set(
-        (catalogsRes.data?.types ?? []).filter(
-          (t) => t.name !== 'Histórico'
-        ) as TypeInterpretation[]
-      );
-      this.instruments.set((catalogsRes.data?.instruments ?? []) as CatalogInstrument[]);
-      this.artists.set(artistsRes.data ?? []);
+      await this.loadFormCatalogs();
       this.showForm.set(true);
     } catch {
       this.error.set('No se pudieron cargar los catálogos.');
     }
   }
 
+  async openEditForm(item: Interpretation): Promise<void> {
+    if (!this.isOwnInterpretation(item)) return;
+
+    this.formError.set(null);
+    this.editingInterpretation.set(item);
+    this.formWorkId.set(item.id_work);
+    this.formTypeId.set(item.id_type_interpretation ?? null);
+    this.formDate.set(item.load_file_date);
+    this.audioFile.set(null);
+    this.audioFileName.set(null);
+    this.existingAudioUrl.set(this.hasAudio(item) ? this.audioUrl(item) : null);
+    this.artistRows.set(
+      item.interpretation_artists?.length
+        ? item.interpretation_artists.map((row) => ({
+            id_artist: row.id_artist,
+            id_instrument: row.id_instrument ?? null,
+          }))
+        : [{ id_artist: 0, id_instrument: null }]
+    );
+
+    try {
+      await this.loadFormCatalogs();
+      this.showForm.set(true);
+    } catch {
+      this.error.set('No se pudieron cargar los catálogos.');
+    }
+  }
+
+  private async loadFormCatalogs(): Promise<void> {
+    const [worksRes, catalogsRes, artistsRes] = await Promise.all([
+      firstValueFrom(this.api.getWorks()),
+      firstValueFrom(this.api.getCatalogs()),
+      firstValueFrom(this.api.getArtists()),
+    ]);
+    this.works.set(worksRes.data ?? []);
+    this.types.set(
+      (catalogsRes.data?.types ?? []).filter((t) => t.name !== 'Histórico') as TypeInterpretation[]
+    );
+    this.instruments.set((catalogsRes.data?.instruments ?? []) as CatalogInstrument[]);
+    this.artists.set(artistsRes.data ?? []);
+  }
+
   closeForm(): void {
     this.showForm.set(false);
+    this.editingInterpretation.set(null);
     this.formError.set(null);
+    this.existingAudioUrl.set(null);
   }
 
   addArtistRow(): void {
@@ -249,19 +295,37 @@ export class InterpretationsComponent implements OnInit {
     this.audioFileName.set(file?.name ?? null);
   }
 
+  private buildFormData(): FormData {
+    const rows = this.artistRows().filter((r) => r.id_artist > 0);
+    const formData = new FormData();
+    formData.append('id_work', String(this.formWorkId()));
+    formData.append('id_type_interpretation', String(this.formTypeId()));
+    formData.append('load_file_date', this.formDate().trim());
+    formData.append(
+      'artists',
+      JSON.stringify(rows.map((r) => ({ id_artist: r.id_artist, id_instrument: r.id_instrument })))
+    );
+    const audio = this.audioFile();
+    if (audio) {
+      formData.append('audioMp3', audio);
+    }
+    return formData;
+  }
+
   async submitInterpretation(): Promise<void> {
     const id_work = this.formWorkId();
     const id_type_interpretation = this.formTypeId();
     const load_file_date = this.formDate().trim();
     const type = this.selectedType();
     const rows = this.artistRows().filter((r) => r.id_artist > 0);
+    const editing = this.editingInterpretation();
 
     if (!id_work || !id_type_interpretation || !load_file_date) {
       this.formError.set('Obra, tipo y fecha son obligatorios.');
       return;
     }
 
-    if (!this.audioFile()) {
+    if (!this.audioFile() && !this.existingAudioUrl()) {
       this.formError.set('Debes adjuntar un archivo MP3.');
       return;
     }
@@ -276,27 +340,56 @@ export class InterpretationsComponent implements OnInit {
     this.saving.set(true);
     this.formError.set(null);
 
-    const formData = new FormData();
-    formData.append('id_work', String(id_work));
-    formData.append('id_type_interpretation', String(id_type_interpretation));
-    formData.append('load_file_date', load_file_date);
-    formData.append(
-      'artists',
-      JSON.stringify(rows.map((r) => ({ id_artist: r.id_artist, id_instrument: r.id_instrument })))
-    );
-    formData.append('audioMp3', this.audioFile()!);
+    const formData = this.buildFormData();
 
     try {
-      await firstValueFrom(this.api.createInterpretation(formData));
+      if (editing) {
+        await firstValueFrom(this.api.updateInterpretation(editing.id_interpretation, formData));
+      } else {
+        if (!this.audioFile()) {
+          this.formError.set('Debes adjuntar un archivo MP3.');
+          this.saving.set(false);
+          return;
+        }
+        await firstValueFrom(this.api.createInterpretation(formData));
+      }
       this.closeForm();
       await this.loadInterpretations();
     } catch (err: unknown) {
       const message =
         (err as { error?: { message?: string } })?.error?.message ??
-        'No se pudo registrar la interpretación';
+        (editing ? 'No se pudo actualizar la interpretación' : 'No se pudo registrar la interpretación');
       this.formError.set(message);
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  async deleteInterpretation(item: Interpretation): Promise<void> {
+    if (!this.isOwnInterpretation(item)) return;
+
+    const confirmed = confirm(
+      `¿Eliminar la interpretación de "${item.work?.name ?? 'esta obra'}"?`
+    );
+    if (!confirmed) return;
+
+    this.deletingId.set(item.id_interpretation);
+    this.error.set(null);
+
+    try {
+      if (this.player.isCurrentTrack(item.id_interpretation)) {
+        this.player.stop();
+      }
+      await firstValueFrom(this.api.deleteInterpretation(item.id_interpretation));
+      this.selectedIds.update((ids) => ids.filter((id) => id !== item.id_interpretation));
+      await this.loadInterpretations();
+    } catch (err: unknown) {
+      const message =
+        (err as { error?: { message?: string } })?.error?.message ??
+        'No se pudo eliminar la interpretación';
+      this.error.set(message);
+    } finally {
+      this.deletingId.set(null);
     }
   }
 }

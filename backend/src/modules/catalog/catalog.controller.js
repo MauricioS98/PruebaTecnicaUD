@@ -153,6 +153,19 @@ export async function createInterpretation(req, res, next) {
   }
 }
 
+export async function updateInterpretation(req, res, next) {
+  try {
+    const data = await catalogService.updateInterpretation(
+      req.params.id,
+      parseInterpretationPayload(req),
+      req.user
+    );
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function deleteInterpretation(req, res, next) {
   try {
     const data = await catalogService.deleteInterpretation(req.params.id, req.user);
