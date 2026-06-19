@@ -12,7 +12,6 @@ function isLocalHost(host = '') {
 function shouldUseSsl() {
   if (process.env.DB_SSL === 'false') return false;
   if (process.env.DB_SSL === 'true') return true;
-  if (process.env.PGSSLMODE === 'require') return true;
   if (process.env.DATABASE_URL) return true;
   if (process.env.DB_HOST && !isLocalHost(process.env.DB_HOST)) return true;
   return process.env.NODE_ENV === 'production';
@@ -21,33 +20,43 @@ function shouldUseSsl() {
 function buildSslConfig() {
   if (process.env.DB_CA_CERT) {
     return {
-      require: true,
       rejectUnauthorized: true,
-      ca: process.env.DB_CA_CERT,
+      ca: process.env.DB_CA_CERT.replace(/\\n/g, '\n'),
     };
   }
 
   if (process.env.DB_CA_CERT_PATH) {
     return {
-      require: true,
       rejectUnauthorized: true,
       ca: fs.readFileSync(process.env.DB_CA_CERT_PATH, 'utf8'),
     };
   }
 
-  return {
-    require: true,
-    rejectUnauthorized: false,
-  };
+  // Aiven: cifrado sí, sin validar cadena (evita "self-signed certificate in certificate chain")
+  return { rejectUnauthorized: false };
+}
+
+/** Quita sslmode de la URL para que pg no fuerce verify-full (incompatible con Aiven sin CA local). */
+function sanitizeConnectionUrl(url) {
+  try {
+    const parsed = new URL(url);
+    for (const key of ['sslmode', 'ssl', 'uselibpqcompat']) {
+      parsed.searchParams.delete(key);
+    }
+    const result = parsed.toString();
+    return result.endsWith('?') ? result.slice(0, -1) : result;
+  } catch {
+    return url
+      .replace(/[?&]sslmode=[^&]*/gi, '')
+      .replace(/[?&]uselibpqcompat=[^&]*/gi, '')
+      .replace(/\?&/, '?')
+      .replace(/[?&]$/, '');
+  }
 }
 
 function buildConnectionUrl() {
   if (process.env.DATABASE_URL) {
-    const url = process.env.DATABASE_URL.trim();
-    if (/sslmode=/i.test(url)) {
-      return url;
-    }
-    return `${url}${url.includes('?') ? '&' : '?'}sslmode=require`;
+    return sanitizeConnectionUrl(process.env.DATABASE_URL.trim());
   }
 
   const host = process.env.DB_HOST?.trim();
@@ -62,7 +71,7 @@ function buildConnectionUrl() {
     );
   }
 
-  return `postgres://${user}:${password}@${host}:${port}/${database}?sslmode=require`;
+  return `postgres://${user}:${password}@${host}:${port}/${database}`;
 }
 
 function createSequelize() {
@@ -84,10 +93,9 @@ function createSequelize() {
   };
 
   if (shouldUseSsl()) {
-    const ssl = buildSslConfig();
     return new Sequelize(buildConnectionUrl(), {
       ...commonOptions,
-      dialectOptions: { ssl },
+      dialectOptions: { ssl: buildSslConfig() },
     });
   }
 
@@ -110,8 +118,8 @@ export function getDatabaseDiagnostics() {
   return {
     ssl: shouldUseSsl(),
     usesDatabaseUrl: Boolean(process.env.DATABASE_URL),
-    pgSslMode: process.env.PGSSLMODE || null,
     dbSslFlag: process.env.DB_SSL || null,
+    sslVerify: Boolean(process.env.DB_CA_CERT || process.env.DB_CA_CERT_PATH),
   };
 }
 
