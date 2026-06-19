@@ -6,7 +6,12 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "docker:build": "docker build -t orchestapp-api .",
+    "docker:run": "docker run --rm -p 3000:3000 --env-file .env orchestapp-api",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f api"
   },
   "keywords": [],
   "author": "",

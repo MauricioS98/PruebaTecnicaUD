@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log*
+.env
+.env.*
+!.env.example
+!.env.docker.example
+uploads/scores/*
+uploads/audio/*
+!uploads/scores/.gitkeep
+!uploads/audio/.gitkeep
+.git
+.gitignore
+README.md
+DOCKER.md
+docker-compose.yml
+.dockerignore

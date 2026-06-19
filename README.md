@@ -81,6 +81,19 @@ API en `http://localhost:3000`
 **Documentación Swagger:** [http://localhost:3000/api/docs](http://localhost:3000/api/docs)  
 Especificación OpenAPI JSON: `http://localhost:3000/api/docs/openapi.json`
 
+#### Backend con Docker (alternativa)
+
+Stack local con API + PostgreSQL:
+
+```bash
+cd backend
+cp .env.docker.example .env
+# Configurar GOOGLE_CLIENT_ID en .env
+docker compose up --build
+```
+
+Solo la imagen de la API (BD externa): ver [backend/DOCKER.md](backend/DOCKER.md).
+
 ### 3. Frontend
 
 ```bash
