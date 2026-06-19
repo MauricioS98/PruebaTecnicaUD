@@ -36,6 +36,30 @@ export class WorksComponent implements OnInit {
   readonly selectedScoreFile = signal<File | null>(null);
   readonly selectedScoreName = signal<string | null>(null);
   readonly existingScoreUrl = signal<string | null>(null);
+  readonly composerSearch = signal('');
+  readonly genreSearch = signal('');
+
+  readonly filteredComposers = computed(() => {
+    const term = this.composerSearch().trim().toLowerCase();
+    const list = this.composers();
+    if (!term) return list;
+    return list.filter((composer) => composer.nickname.toLowerCase().includes(term));
+  });
+
+  readonly filteredGenres = computed(() => {
+    const term = this.genreSearch().trim().toLowerCase();
+    const list = this.genres();
+    if (!term) return list;
+    return list.filter((genre) => genre.name.toLowerCase().includes(term));
+  });
+
+  readonly selectedComposers = computed(() =>
+    this.composers().filter((composer) => this.selectedComposerIds().includes(composer.id_composer))
+  );
+
+  readonly selectedGenres = computed(() =>
+    this.genres().filter((genre) => this.selectedGenreIds().includes(genre.id_genre))
+  );
 
   readonly filteredWorks = computed(() => {
     const term = this.search().trim().toLowerCase();
@@ -114,6 +138,8 @@ export class WorksComponent implements OnInit {
     const myId = this.myComposerId();
     this.selectedComposerIds.set(myId ? [myId] : []);
     this.selectedGenreIds.set([]);
+    this.composerSearch.set('');
+    this.genreSearch.set('');
 
     try {
       await this.loadFormCatalogs();
@@ -136,6 +162,8 @@ export class WorksComponent implements OnInit {
     this.existingScoreUrl.set(this.scoreUrl(work));
     this.selectedComposerIds.set(work.composers?.map((c) => c.id_composer) ?? []);
     this.selectedGenreIds.set(work.genres?.map((g) => g.id_genre) ?? []);
+    this.composerSearch.set('');
+    this.genreSearch.set('');
 
     try {
       await this.loadFormCatalogs();
@@ -152,6 +180,8 @@ export class WorksComponent implements OnInit {
     this.selectedScoreFile.set(null);
     this.selectedScoreName.set(null);
     this.existingScoreUrl.set(null);
+    this.composerSearch.set('');
+    this.genreSearch.set('');
   }
 
   onScoreSelected(event: Event): void {

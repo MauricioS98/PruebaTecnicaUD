@@ -197,14 +197,15 @@
       </div>
 
       <div class="interp-form__field">
-        <label class="oa-label" for="interp-date">Fecha de carga</label>
-        <input
-          id="interp-date"
-          class="oa-input"
-          type="date"
-          [value]="formDate()"
-          (input)="formDate.set($any($event.target).value)"
-        />
+        <span class="oa-label">Fecha de carga</span>
+        <p class="interp-form__auto-date">{{ loadFileDateLabel() }}</p>
+        <p class="interp-form__hint oa-text-muted">
+          @if (isEditing()) {
+            Fecha original de registro (no editable).
+          } @else {
+            Se asignará automáticamente al registrar.
+          }
+        </p>
       </div>
 
       <div class="interp-form__field">
@@ -236,35 +237,50 @@
           }
           <button class="oa-btn oa-btn--ghost" type="button" (click)="addArtistRow()">+ Añadir</button>
         </div>
-        @for (row of artistRows(); track $index) {
-          <div class="interp-form__artist-row">
-            <select
-              class="oa-input"
-              [value]="row.id_artist"
-              (change)="updateArtistRow($index, 'id_artist', +$any($event.target).value)"
-            >
-              <option value="0">Artista</option>
-              @for (artist of artists(); track artist.id_artist) {
-                <option [value]="artist.id_artist">{{ artist.nickname }}</option>
-              }
-            </select>
-            <select
-              class="oa-input"
-              [value]="row.id_instrument ?? ''"
-              (change)="updateArtistRow($index, 'id_instrument', +$any($event.target).value || null)"
-            >
-              <option value="">Instrumento (opcional)</option>
-              @for (inst of instruments(); track inst.id_instrument) {
-                <option [value]="inst.id_instrument">{{ inst.name }}</option>
-              }
-            </select>
-            @if (artistRows().length > 1) {
-              <button class="oa-btn oa-btn--ghost" type="button" (click)="removeArtistRow($index)">
-                ✕
-              </button>
+        <div class="oa-picker">
+          <div class="oa-picker__rows">
+            @for (row of artistRows(); track $index) {
+              <div class="oa-picker__row">
+                <div>
+                  <span class="oa-picker__row-label">Intérprete {{ $index + 1 }}</span>
+                  <select
+                    class="oa-input"
+                    [value]="row.id_artist"
+                    (change)="updateArtistRow($index, 'id_artist', +$any($event.target).value)"
+                  >
+                    <option value="0">Selecciona un artista</option>
+                    @for (artist of artists(); track artist.id_artist) {
+                      <option [value]="artist.id_artist">{{ artist.nickname }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <span class="oa-picker__row-label">Instrumento</span>
+                  <select
+                    class="oa-input"
+                    [value]="row.id_instrument ?? ''"
+                    (change)="updateArtistRow($index, 'id_instrument', +$any($event.target).value || null)"
+                  >
+                    <option value="">Instrumento (opcional)</option>
+                    @for (inst of instruments(); track inst.id_instrument) {
+                      <option [value]="inst.id_instrument">{{ inst.name }}</option>
+                    }
+                  </select>
+                </div>
+                @if (artistRows().length > 1) {
+                  <button
+                    class="oa-btn oa-btn--ghost"
+                    type="button"
+                    (click)="removeArtistRow($index)"
+                    aria-label="Quitar intérprete"
+                  >
+                    ✕
+                  </button>
+                }
+              </div>
             }
           </div>
-        }
+        </div>
       </div>
 
       @if (formError()) {

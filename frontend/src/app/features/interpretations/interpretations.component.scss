@@ -103,7 +103,7 @@
   display: flex;
   align-items: center;
   gap: $space-3;
-  margin-bottom: $space-3;
+  margin-bottom: $space-2;
   flex-wrap: wrap;
 
   .oa-label {
@@ -111,15 +111,9 @@
   }
 }
 
-.interp-form__artist-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: $space-3;
-  margin-bottom: $space-3;
-}
-
 .interp-form__hint {
   font-size: $text-xs;
+  margin-bottom: $space-3;
 }
 
 .interp-form__actions {
@@ -129,6 +123,11 @@
   margin-top: $space-6;
 }
 
-select.oa-input {
-  appearance: auto;
+.interp-form__auto-date {
+  padding: $space-3 $space-4;
+  font-size: $text-sm;
+  color: $color-text-primary;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
 }

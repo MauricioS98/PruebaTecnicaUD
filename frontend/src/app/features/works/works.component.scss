@@ -40,29 +40,6 @@
   margin-bottom: $space-3;
 }
 
-.works-form__checks {
-  display: flex;
-  flex-direction: column;
-  gap: $space-2;
-}
-
-.works-form__check {
-  display: flex;
-  align-items: center;
-  gap: $space-3;
-  font-size: $text-sm;
-  color: $color-text-secondary;
-  cursor: pointer;
-
-  input {
-    accent-color: $color-gold-muted;
-  }
-
-  input:disabled + span {
-    color: $color-text-primary;
-  }
-}
-
 .works-form__file {
   padding: $space-2;
   cursor: pointer;

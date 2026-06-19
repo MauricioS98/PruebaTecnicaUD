@@ -1,0 +1,40 @@
+<div class="searchable-select" [class.searchable-select--open]="open()">
+  <input
+    class="oa-input searchable-select__input"
+    type="text"
+    role="combobox"
+    [attr.aria-expanded]="open()"
+    [placeholder]="placeholder()"
+    [value]="displayText()"
+    (focus)="onFocus()"
+    (input)="onInput($event)"
+    (keydown)="onKeydown($event)"
+    autocomplete="off"
+  />
+
+  @if (open()) {
+    <ul class="searchable-select__list" role="listbox">
+      @if (allowClear() && value()) {
+        <li>
+          <button type="button" class="searchable-select__option" (mousedown.prevent)="select(null)">
+            {{ clearLabel() }}
+          </button>
+        </li>
+      }
+      @for (option of filteredOptions(); track option.value) {
+        <li>
+          <button
+            type="button"
+            class="searchable-select__option"
+            [class.searchable-select__option--active]="option.value === value()"
+            (mousedown.prevent)="select(option.value)"
+          >
+            {{ option.label }}
+          </button>
+        </li>
+      } @empty {
+        <li class="searchable-select__empty">Sin resultados</li>
+      }
+    </ul>
+  }
+</div>

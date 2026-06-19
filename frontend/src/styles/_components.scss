@@ -137,6 +137,28 @@ a {
   }
 }
 
+select.oa-input {
+  appearance: none;
+  color-scheme: dark;
+  cursor: pointer;
+  background-color: $color-navy-dark;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23a8a8b0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right $space-4 center;
+  background-size: 12px 8px;
+  padding-right: $space-10;
+
+  option {
+    background-color: $color-navy-elevated;
+    color: $color-text-primary;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
 .oa-label {
   display: block;
   font-size: $text-xs;
@@ -145,6 +167,125 @@ a {
   text-transform: uppercase;
   color: $color-text-muted;
   margin-bottom: $space-2;
+}
+
+.oa-picker {
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+
+  &__search {
+    border: none;
+    border-bottom: 1px solid $color-border;
+    border-radius: 0;
+    background: transparent;
+
+    &:focus {
+      box-shadow: none;
+      border-color: $color-border;
+    }
+  }
+
+  &__selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+    padding: $space-3 $space-4;
+    border-bottom: 1px solid $color-border;
+  }
+
+  &__selected-item {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+  }
+
+  &__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: $radius-full;
+    background: rgba(255, 255, 255, 0.08);
+    color: $color-text-secondary;
+    font-size: $text-xs;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      color: $color-text-primary;
+      background: rgba(255, 255, 255, 0.14);
+    }
+  }
+
+  &__list {
+    max-height: 180px;
+    overflow-y: auto;
+    padding: $space-2;
+  }
+
+  &__option {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-2 $space-3;
+    border: none;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: $color-text-secondary;
+    font-family: $font-ui;
+    font-size: $text-sm;
+    text-align: left;
+    cursor: pointer;
+    transition: background $transition-fast, color $transition-fast;
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.04);
+      color: $color-text-primary;
+    }
+
+    &--active {
+      background: $color-gold-soft;
+      color: $color-gold-muted;
+    }
+
+    &:disabled {
+      opacity: 0.75;
+      cursor: default;
+    }
+  }
+
+  &__empty {
+    padding: $space-4;
+    font-size: $text-sm;
+    text-align: center;
+    color: $color-text-muted;
+  }
+
+  &__rows {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+    padding: $space-3;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: $space-3;
+    align-items: center;
+  }
+
+  &__row-label {
+    font-size: $text-xs;
+    color: $color-text-muted;
+    margin-bottom: $space-1;
+  }
 }
 
 // ========================
@@ -281,6 +422,7 @@ a {
 .oa-modal {
   width: 100%;
   max-width: 520px;
+  color-scheme: dark;
   background: $color-navy-elevated;
   border: 1px solid $color-border;
   border-radius: $radius-xl;

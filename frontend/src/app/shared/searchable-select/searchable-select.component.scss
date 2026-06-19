@@ -1,0 +1,60 @@
+@use '../../../styles/tokens' as *;
+
+.searchable-select {
+  position: relative;
+
+  &--open .searchable-select__input {
+    border-color: rgba($color-gold-muted, 0.5);
+    box-shadow: 0 0 0 3px $color-gold-soft;
+  }
+}
+
+.searchable-select__list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + $space-1);
+  left: 0;
+  right: 0;
+  max-height: 180px;
+  margin: 0;
+  padding: $space-2;
+  list-style: none;
+  overflow-y: auto;
+  background: $color-navy-elevated;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
+}
+
+.searchable-select__option {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  padding: $space-2 $space-3;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $color-text-secondary;
+  font-family: $font-ui;
+  font-size: $text-sm;
+  text-align: left;
+  cursor: pointer;
+  transition: background $transition-fast, color $transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: $color-text-primary;
+  }
+
+  &--active {
+    background: $color-gold-soft;
+    color: $color-gold-muted;
+  }
+}
+
+.searchable-select__empty {
+  padding: $space-3;
+  font-size: $text-sm;
+  text-align: center;
+  color: $color-text-muted;
+}

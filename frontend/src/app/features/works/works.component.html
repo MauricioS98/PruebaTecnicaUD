@@ -201,41 +201,100 @@
       <div class="works-form__field">
         <span class="oa-label">Compositores</span>
         <p class="works-form__hint oa-text-muted">
-          Tu perfil se incluye automáticamente. Puedes añadir coautores.
+          Tu perfil se incluye automáticamente. Busca y selecciona coautores.
         </p>
-        <div class="works-form__checks">
-          @for (composer of composers(); track composer.id_composer) {
-            <label class="works-form__check">
-              <input
-                type="checkbox"
-                [checked]="isComposerSelected(composer.id_composer)"
+        <div class="oa-picker">
+          @if (selectedComposers().length) {
+            <div class="oa-picker__selected">
+              @for (composer of selectedComposers(); track composer.id_composer) {
+                <span class="oa-badge oa-badge--gold oa-picker__selected-item">
+                  {{ composer.nickname }}
+                  @if (composer.id_composer === myComposerId()) {
+                    <em class="oa-text-muted">(tú)</em>
+                  } @else {
+                    <button
+                      type="button"
+                      class="oa-picker__remove"
+                      (click)="toggleComposer(composer.id_composer)"
+                      aria-label="Quitar compositor"
+                    >
+                      ×
+                    </button>
+                  }
+                </span>
+              }
+            </div>
+          }
+          <input
+            class="oa-input oa-picker__search"
+            type="search"
+            placeholder="Buscar compositor..."
+            [value]="composerSearch()"
+            (input)="composerSearch.set($any($event.target).value)"
+          />
+          <div class="oa-picker__list">
+            @for (composer of filteredComposers(); track composer.id_composer) {
+              <button
+                type="button"
+                class="oa-picker__option"
+                [class.oa-picker__option--active]="isComposerSelected(composer.id_composer)"
                 [disabled]="composer.id_composer === myComposerId()"
-                (change)="toggleComposer(composer.id_composer)"
-              />
-              <span>
+                (click)="toggleComposer(composer.id_composer)"
+              >
                 {{ composer.nickname }}
                 @if (composer.id_composer === myComposerId()) {
-                  <em class="oa-text-muted"> (tú)</em>
+                  <span class="oa-text-muted">(tú, incluido)</span>
                 }
-              </span>
-            </label>
-          }
+              </button>
+            } @empty {
+              <p class="oa-picker__empty">No hay compositores que coincidan.</p>
+            }
+          </div>
         </div>
       </div>
 
       <div class="works-form__field">
         <span class="oa-label">Géneros</span>
-        <div class="works-form__checks">
-          @for (genre of genres(); track genre.id_genre) {
-            <label class="works-form__check">
-              <input
-                type="checkbox"
-                [checked]="isGenreSelected(genre.id_genre)"
-                (change)="toggleGenre(genre.id_genre)"
-              />
-              <span>{{ genre.name }}</span>
-            </label>
+        <p class="works-form__hint oa-text-muted">Busca y selecciona uno o varios géneros.</p>
+        <div class="oa-picker">
+          @if (selectedGenres().length) {
+            <div class="oa-picker__selected">
+              @for (genre of selectedGenres(); track genre.id_genre) {
+                <span class="oa-badge oa-badge--neutral oa-picker__selected-item">
+                  {{ genre.name }}
+                  <button
+                    type="button"
+                    class="oa-picker__remove"
+                    (click)="toggleGenre(genre.id_genre)"
+                    aria-label="Quitar género"
+                  >
+                    ×
+                  </button>
+                </span>
+              }
+            </div>
           }
+          <input
+            class="oa-input oa-picker__search"
+            type="search"
+            placeholder="Buscar género..."
+            [value]="genreSearch()"
+            (input)="genreSearch.set($any($event.target).value)"
+          />
+          <div class="oa-picker__list">
+            @for (genre of filteredGenres(); track genre.id_genre) {
+              <button
+                type="button"
+                class="oa-picker__option"
+                [class.oa-picker__option--active]="isGenreSelected(genre.id_genre)"
+                (click)="toggleGenre(genre.id_genre)"
+              >
+                {{ genre.name }}
+              </button>
+            } @empty {
+              <p class="oa-picker__empty">No hay géneros que coincidan.</p>
+            }
+          </div>
         </div>
       </div>
 

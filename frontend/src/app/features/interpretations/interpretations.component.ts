@@ -52,7 +52,6 @@ export class InterpretationsComponent implements OnInit {
 
   readonly formWorkId = signal<number | null>(null);
   readonly formTypeId = signal<number | null>(null);
-  readonly formDate = signal('');
   readonly artistRows = signal<ArtistFormRow[]>([]);
   readonly audioFile = signal<File | null>(null);
   readonly audioFileName = signal<string | null>(null);
@@ -60,6 +59,12 @@ export class InterpretationsComponent implements OnInit {
 
   readonly myDirectorId = computed(() => this.auth.directorProfileId());
   readonly isEditing = computed(() => !!this.editingInterpretation());
+  readonly loadFileDateLabel = computed(() => {
+    const iso = this.isEditing()
+      ? (this.editingInterpretation()?.load_file_date ?? this.todayDate())
+      : this.todayDate();
+    return this.formatDateLabel(iso);
+  });
 
   readonly filteredInterpretations = computed(() => {
     const term = this.search().trim().toLowerCase();
@@ -205,7 +210,6 @@ export class InterpretationsComponent implements OnInit {
     this.editingInterpretation.set(null);
     this.formWorkId.set(null);
     this.formTypeId.set(null);
-    this.formDate.set(new Date().toISOString().slice(0, 10));
     this.artistRows.set([{ id_artist: 0, id_instrument: null }]);
     this.audioFile.set(null);
     this.audioFileName.set(null);
@@ -226,7 +230,6 @@ export class InterpretationsComponent implements OnInit {
     this.editingInterpretation.set(item);
     this.formWorkId.set(item.id_work);
     this.formTypeId.set(item.id_type_interpretation ?? null);
-    this.formDate.set(item.load_file_date);
     this.audioFile.set(null);
     this.audioFileName.set(null);
     this.existingAudioUrl.set(this.hasAudio(item) ? this.audioUrl(item) : null);
@@ -300,7 +303,7 @@ export class InterpretationsComponent implements OnInit {
     const formData = new FormData();
     formData.append('id_work', String(this.formWorkId()));
     formData.append('id_type_interpretation', String(this.formTypeId()));
-    formData.append('load_file_date', this.formDate().trim());
+    formData.append('load_file_date', this.resolveLoadFileDate());
     formData.append(
       'artists',
       JSON.stringify(rows.map((r) => ({ id_artist: r.id_artist, id_instrument: r.id_instrument })))
@@ -315,13 +318,12 @@ export class InterpretationsComponent implements OnInit {
   async submitInterpretation(): Promise<void> {
     const id_work = this.formWorkId();
     const id_type_interpretation = this.formTypeId();
-    const load_file_date = this.formDate().trim();
     const type = this.selectedType();
     const rows = this.artistRows().filter((r) => r.id_artist > 0);
     const editing = this.editingInterpretation();
 
-    if (!id_work || !id_type_interpretation || !load_file_date) {
-      this.formError.set('Obra, tipo y fecha son obligatorios.');
+    if (!id_work || !id_type_interpretation) {
+      this.formError.set('Obra y tipo son obligatorios.');
       return;
     }
 
@@ -391,5 +393,22 @@ export class InterpretationsComponent implements OnInit {
     } finally {
       this.deletingId.set(null);
     }
+  }
+
+  private todayDate(): string {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  private resolveLoadFileDate(): string {
+    if (this.isEditing()) {
+      return this.editingInterpretation()?.load_file_date ?? this.todayDate();
+    }
+    return this.todayDate();
+  }
+
+  private formatDateLabel(iso: string): string {
+    const [year, month, day] = iso.split('-');
+    if (!year || !month || !day) return iso;
+    return `${day}/${month}/${year}`;
   }
 }
