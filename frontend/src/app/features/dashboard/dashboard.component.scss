@@ -111,6 +111,12 @@
   }
 }
 
+.dashboard__more {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: $space-4;
+}
+
 .oa-badge + .oa-badge {
   margin-left: $space-2;
 }

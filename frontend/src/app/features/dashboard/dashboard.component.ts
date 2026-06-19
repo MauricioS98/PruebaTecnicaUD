@@ -1,4 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { AdminUser, Interpretation, Work } from '../../core/models/api.models';
@@ -7,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [],
+  imports: [RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -29,6 +30,11 @@ export class DashboardComponent implements OnInit {
 
   readonly isAdminView = computed(() => this.scope() === 'admin');
   readonly currentUserId = computed(() => this.auth.currentUser()?.id ?? null);
+
+  readonly previewWorks = computed(() => this.works().slice(0, 5));
+  readonly previewInterpretations = computed(() => this.interpretations().slice(0, 5));
+  readonly hasMoreWorks = computed(() => this.works().length > 5);
+  readonly hasMoreInterpretations = computed(() => this.interpretations().length > 5);
 
   async ngOnInit(): Promise<void> {
     try {

@@ -1,5 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, map, startWith } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { AudioPlayerService } from '../../core/services/audio-player.service';
 import { BrandLogoComponent } from '../../shared/brand-logo/brand-logo.component';
@@ -21,8 +23,20 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dial
   styleUrl: './shell.component.scss',
 })
 export class ShellComponent {
+  private readonly router = inject(Router);
   readonly auth = inject(AuthService);
   readonly player = inject(AudioPlayerService);
+
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map(() => this.router.url),
+      startWith(this.router.url)
+    ),
+    { initialValue: this.router.url }
+  );
+
+  readonly showTopbarSearch = computed(() => !this.currentUrl().startsWith('/dashboard'));
 
   private readonly allNavItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '◈', requiresDashboard: true },

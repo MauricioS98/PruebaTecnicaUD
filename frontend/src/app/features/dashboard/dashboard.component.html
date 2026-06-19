@@ -11,7 +11,7 @@
         </p>
       }
     </div>
-    <button class="oa-btn oa-btn--ghost" (click)="auth.logout()">Cerrar sesión</button>
+    <button class="oa-btn oa-btn--ghost" style="display: none;" (click)="auth.logout()">Cerrar sesión</button>
   </header>
 
   @if (loading()) {
@@ -51,7 +51,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (work of works(); track work.id_work) {
+                  @for (work of previewWorks(); track work.id_work) {
                     <tr>
                       <td><strong>{{ work.name }}</strong></td>
                       <td>{{ work.write_date }}</td>
@@ -65,6 +65,11 @@
                 </tbody>
               </table>
             </div>
+            @if (hasMoreWorks()) {
+              <div class="dashboard__more">
+                <a class="oa-btn oa-btn--ghost" routerLink="/works">Ver más</a>
+              </div>
+            }
           } @else {
             <p class="oa-text-muted">No tienes obras publicadas todavía.</p>
           }
@@ -78,7 +83,7 @@
           </div>
           @if (interpretations().length) {
             <div class="interp-list">
-              @for (item of interpretations().slice(0, 6); track item.id_interpretation) {
+              @for (item of previewInterpretations(); track item.id_interpretation) {
                 <article class="oa-card interp-card">
                   <div>
                     <h4 class="oa-font-display">{{ item.work?.name }}</h4>
@@ -93,6 +98,11 @@
                 </article>
               }
             </div>
+            @if (hasMoreInterpretations()) {
+              <div class="dashboard__more">
+                <a class="oa-btn oa-btn--ghost" routerLink="/interpretations">Ver más</a>
+              </div>
+            }
           } @else {
             <p class="oa-text-muted">No tienes interpretaciones registradas todavía.</p>
           }

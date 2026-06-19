@@ -31,10 +31,12 @@
   </aside>
 
   <div class="shell__main">
-    <header class="shell__topbar">
-      <div class="shell__search">
-        <input class="oa-input" type="search" placeholder="Buscar obras, artistas, directores..." />
-      </div>
+    <header class="shell__topbar" [class.shell__topbar--compact]="!showTopbarSearch()">
+      @if (showTopbarSearch()) {
+        <div class="shell__search">
+          <input class="oa-input" type="search" placeholder="Buscar obras, artistas, directores..." />
+        </div>
+      }
       <button class="oa-btn oa-btn--secondary" (click)="auth.logout()">Salir</button>
     </header>
 

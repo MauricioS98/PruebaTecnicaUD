@@ -123,6 +123,10 @@
   border-bottom: 1px solid $color-border;
   background: rgba($color-navy-dark, 0.6);
   backdrop-filter: blur(12px);
+
+  &--compact {
+    justify-content: flex-end;
+  }
 }
 
 .shell__search {
