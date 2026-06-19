@@ -1,0 +1,92 @@
+@use '../catalog/catalog-page';
+@use '../../../styles/tokens' as *;
+
+.admin-instruments__subtitle {
+  margin-top: $space-2;
+  font-size: $text-sm;
+  max-width: 52ch;
+}
+
+.admin-instruments__grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: $space-6;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-instruments__panel {
+  padding: $space-6;
+
+  h3 {
+    font-family: $font-display;
+    font-size: $text-xl;
+  }
+}
+
+.admin-instruments__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-5;
+  flex-wrap: wrap;
+}
+
+.admin-instruments__actions {
+  display: flex;
+  gap: $space-1;
+}
+
+.admin-instruments__icon-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-size: $text-sm;
+
+  &--danger {
+    color: #f0a0a0;
+
+    &:hover:not(:disabled) {
+      color: #ffb8b8;
+      background: rgba(220, 80, 80, 0.1);
+    }
+  }
+}
+
+.admin-instruments-form {
+  max-width: 480px;
+}
+
+.admin-instruments-form__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-6;
+
+  h3 {
+    font-size: $text-2xl;
+    margin-top: $space-1;
+  }
+}
+
+.admin-instruments-form__field {
+  margin-bottom: $space-5;
+}
+
+.admin-instruments-form__textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.admin-instruments-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-3;
+  margin-top: $space-6;
+}

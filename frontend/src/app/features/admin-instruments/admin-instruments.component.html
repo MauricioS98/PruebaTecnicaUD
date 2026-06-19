@@ -1,0 +1,224 @@
+<div class="catalog-page admin-instruments">
+  <header class="catalog-page__header">
+    <div>
+      <p class="catalog-page__eyebrow">Administración</p>
+      <h2 class="oa-font-display">Instrumentos</h2>
+      <p class="admin-instruments__subtitle oa-text-secondary">
+        Gestiona tipos de instrumento e instrumentos del catálogo.
+      </p>
+    </div>
+    <span class="oa-badge oa-badge--gold">Solo admin</span>
+  </header>
+
+  @if (loading()) {
+    <p class="oa-text-muted">Cargando catálogo...</p>
+  } @else {
+    <div class="admin-instruments__grid">
+      <section class="oa-card admin-instruments__panel">
+        <div class="admin-instruments__panel-head">
+          <h3>Tipos de instrumento</h3>
+          <button class="oa-btn oa-btn--primary" type="button" (click)="openTypeForm()">
+            Nuevo tipo
+          </button>
+        </div>
+
+        @if (typeInstruments().length) {
+          <div class="oa-table-wrap">
+            <table class="oa-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Descripción</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (type of typeInstruments(); track type.id_type_instrument) {
+                  <tr>
+                    <td><strong>{{ type.name }}</strong></td>
+                    <td>
+                      <span class="catalog-page__desc oa-text-secondary">
+                        {{ type.description || 'Sin descripción' }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="admin-instruments__actions">
+                        <button
+                          class="oa-btn oa-btn--ghost admin-instruments__icon-btn"
+                          type="button"
+                          title="Editar"
+                          aria-label="Editar"
+                          (click)="openTypeForm(type)"
+                        >
+                          ✎
+                        </button>
+                        <button
+                          class="oa-btn oa-btn--ghost admin-instruments__icon-btn admin-instruments__icon-btn--danger"
+                          type="button"
+                          title="Eliminar"
+                          aria-label="Eliminar"
+                          [disabled]="deletingTypeId() === type.id_type_instrument"
+                          (click)="deleteType(type)"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="oa-text-muted">No hay tipos registrados.</p>
+        }
+      </section>
+
+      <section class="oa-card admin-instruments__panel">
+        <div class="admin-instruments__panel-head">
+          <h3>Instrumentos</h3>
+          <button
+            class="oa-btn oa-btn--primary"
+            type="button"
+            [disabled]="!typeInstruments().length"
+            (click)="openInstrumentForm()"
+          >
+            Nuevo instrumento
+          </button>
+        </div>
+
+        @if (!typeInstruments().length) {
+          <p class="oa-text-muted">Crea al menos un tipo antes de registrar instrumentos.</p>
+        } @else if (instruments().length) {
+          <div class="oa-table-wrap">
+            <table class="oa-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Tipo</th>
+                  <th>Descripción</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (instrument of instruments(); track instrument.id_instrument) {
+                  <tr>
+                    <td><strong>{{ instrument.name }}</strong></td>
+                    <td>
+                      <span class="oa-badge oa-badge--neutral">
+                        {{ instrument.type_instrument?.name ?? typeName(instrument.id_type_instrument) }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="catalog-page__desc oa-text-secondary">
+                        {{ instrument.description || 'Sin descripción' }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="admin-instruments__actions">
+                        <button
+                          class="oa-btn oa-btn--ghost admin-instruments__icon-btn"
+                          type="button"
+                          title="Editar"
+                          aria-label="Editar"
+                          (click)="openInstrumentForm(instrument)"
+                        >
+                          ✎
+                        </button>
+                        <button
+                          class="oa-btn oa-btn--ghost admin-instruments__icon-btn admin-instruments__icon-btn--danger"
+                          type="button"
+                          title="Eliminar"
+                          aria-label="Eliminar"
+                          [disabled]="deletingInstrumentId() === instrument.id_instrument"
+                          (click)="deleteInstrument(instrument)"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="oa-text-muted">No hay instrumentos registrados.</p>
+        }
+      </section>
+    </div>
+  }
+
+  @if (error()) {
+    <p class="catalog-page__error">{{ error() }}</p>
+  }
+</div>
+
+@if (showForm()) {
+  <div class="oa-modal-backdrop" (click)="closeForm()">
+    <div class="oa-modal admin-instruments-form" role="dialog" (click)="$event.stopPropagation()">
+      <header class="admin-instruments-form__head">
+        <div>
+          <p class="catalog-page__eyebrow">Administración</p>
+          <h3 class="oa-font-display">
+            @if (formMode() === 'type') {
+              {{ editingType() ? 'Editar tipo' : 'Nuevo tipo' }}
+            } @else {
+              {{ editingInstrument() ? 'Editar instrumento' : 'Nuevo instrumento' }}
+            }
+          </h3>
+        </div>
+        <button class="oa-btn oa-btn--ghost" type="button" (click)="closeForm()">✕</button>
+      </header>
+
+      <div class="admin-instruments-form__field">
+        <label class="oa-label" for="item-name">Nombre</label>
+        <input
+          id="item-name"
+          class="oa-input"
+          type="text"
+          [ngModel]="formName()"
+          (ngModelChange)="formName.set($event)"
+        />
+      </div>
+
+      @if (formMode() === 'instrument') {
+        <div class="admin-instruments-form__field">
+          <label class="oa-label" for="item-type">Tipo</label>
+          <select
+            id="item-type"
+            class="oa-input"
+            [ngModel]="formTypeId()"
+            (ngModelChange)="formTypeId.set(+$event)"
+          >
+            @for (type of typeInstruments(); track type.id_type_instrument) {
+              <option [ngValue]="type.id_type_instrument">{{ type.name }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <div class="admin-instruments-form__field">
+        <label class="oa-label" for="item-desc">Descripción</label>
+        <textarea
+          id="item-desc"
+          class="oa-input admin-instruments-form__textarea"
+          rows="3"
+          [ngModel]="formDescription()"
+          (ngModelChange)="formDescription.set($event)"
+        ></textarea>
+      </div>
+
+      @if (formError()) {
+        <p class="catalog-page__error">{{ formError() }}</p>
+      }
+
+      <div class="admin-instruments-form__actions">
+        <button class="oa-btn oa-btn--secondary" type="button" (click)="closeForm()">Cancelar</button>
+        <button class="oa-btn oa-btn--primary" type="button" [disabled]="saving()" (click)="submitForm()">
+          {{ saving() ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
