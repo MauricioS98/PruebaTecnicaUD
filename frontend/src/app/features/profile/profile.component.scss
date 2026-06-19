@@ -78,6 +78,45 @@
   }
 }
 
+.profile__role-hint {
+  font-size: $text-xs;
+  line-height: 1.5;
+}
+
+.profile__bio {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.profile__bio-text {
+  font-size: $text-sm;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.profile__bio-empty {
+  font-size: $text-sm;
+  font-style: italic;
+}
+
+.profile__bio-edit {
+  align-self: flex-start;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.profile__bio-input {
+  resize: vertical;
+  min-height: 88px;
+}
+
+.profile__bio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3;
+}
+
 .profile__deactivate {
   margin-top: auto;
   width: 100%;

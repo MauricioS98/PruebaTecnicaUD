@@ -115,6 +115,7 @@ export async function getProfileStatus(req) {
       active.push({
         ...meta,
         id: record[idField],
+        profileDescription: record.description ?? '',
         ...deactivation,
       });
     } else {
@@ -167,6 +168,24 @@ export async function deactivateProfile(req, profileType) {
   await sequelize.transaction(async (transaction) => {
     await setAuditUser(req.user.email, transaction);
     await record.destroy({ transaction });
+  });
+
+  return getProfileStatus(req);
+}
+
+export async function updateProfileDescription(req, profileType, description) {
+  if (!SPECIAL_PROFILE_TYPES.includes(profileType)) {
+    throw new ApiError(400, 'Tipo de perfil inválido');
+  }
+
+  const record = await findProfileRecord(req.user.id_user, profileType);
+  if (!record) {
+    throw new ApiError(404, `No tienes el perfil de ${PROFILE_META[profileType].label}`);
+  }
+
+  await sequelize.transaction(async (transaction) => {
+    await setAuditUser(req.user.email, transaction);
+    await record.update({ description: String(description ?? '').trim() }, { transaction });
   });
 
   return getProfileStatus(req);

@@ -8,6 +8,7 @@ export interface ProfileOption {
   type: ProfileType;
   label: string;
   description: string;
+  profileDescription?: string;
   id?: number;
   canDeactivate?: boolean;
   deactivateBlockedReason?: string | null;
@@ -44,6 +45,14 @@ export class ProfileService {
   deactivate(type: ProfileType) {
     return firstValueFrom(
       this.http.delete<{ success: boolean; data: ProfileStatus }>(`${this.base}/${type}`)
+    ).then((r) => r.data);
+  }
+
+  updateDescription(type: ProfileType, description: string) {
+    return firstValueFrom(
+      this.http.patch<{ success: boolean; data: ProfileStatus }>(`${this.base}/${type}`, {
+        description,
+      })
     ).then((r) => r.data);
   }
 }

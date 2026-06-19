@@ -43,8 +43,14 @@ export class DashboardComponent implements OnInit {
       if (data.scope === 'admin') {
         await this.loadUsers();
       }
-    } catch {
-      this.error.set('No se pudo cargar tu panel.');
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status;
+      const message =
+        (err as { error?: { message?: string } })?.error?.message ??
+        (status === 404
+          ? 'El servicio del panel no está disponible. Reinicia el backend.'
+          : 'No se pudo cargar tu panel.');
+      this.error.set(message);
     } finally {
       this.loading.set(false);
     }

@@ -1,11 +1,13 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
-import { ProfileService, ProfileStatus } from '../../core/services/profile.service';
+import { ProfileOption, ProfileService, ProfileStatus } from '../../core/services/profile.service';
 import { ProfileType } from '../../core/models/api.models';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
+  imports: [FormsModule],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
 })
@@ -17,6 +19,9 @@ export class ProfileComponent implements OnInit {
   readonly loading = signal(true);
   readonly activating = signal<ProfileType | null>(null);
   readonly deactivating = signal<ProfileType | null>(null);
+  readonly savingDescription = signal<ProfileType | null>(null);
+  readonly editingType = signal<ProfileType | null>(null);
+  readonly editDraft = signal('');
   readonly error = signal<string | null>(null);
 
   async ngOnInit(): Promise<void> {
@@ -39,6 +44,39 @@ export class ProfileComponent implements OnInit {
       this.error.set(message);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  startEditDescription(item: ProfileOption): void {
+    this.editingType.set(item.type);
+    this.editDraft.set(item.profileDescription ?? '');
+    this.error.set(null);
+  }
+
+  cancelEditDescription(): void {
+    this.editingType.set(null);
+    this.editDraft.set('');
+  }
+
+  async saveDescription(type: ProfileType): Promise<void> {
+    this.savingDescription.set(type);
+    this.error.set(null);
+
+    try {
+      const data = await this.profileService.updateDescription(type, this.editDraft());
+      this.status.set(data);
+      if (data.user) {
+        this.auth.refreshUser(data.user);
+      }
+      this.editingType.set(null);
+      this.editDraft.set('');
+    } catch (err: unknown) {
+      const message =
+        (err as { error?: { message?: string } })?.error?.message ??
+        'No se pudo guardar la descripción.';
+      this.error.set(message);
+    } finally {
+      this.savingDescription.set(null);
     }
   }
 
@@ -69,6 +107,9 @@ export class ProfileComponent implements OnInit {
       this.status.set(data);
       if (data.user) {
         this.auth.refreshUser(data.user);
+      }
+      if (this.editingType() === type) {
+        this.cancelEditDescription();
       }
     } catch (err: unknown) {
       const message =

@@ -1,4 +1,4 @@
-import { getProfileStatus, activateProfile, deactivateProfile } from './profile.service.js';
+import { getProfileStatus, activateProfile, deactivateProfile, updateProfileDescription } from './profile.service.js';
 import { ApiError } from '../../utils/ApiError.js';
 
 export async function status(req, res, next) {
@@ -61,5 +61,32 @@ export async function deactivateArtist(req, res, next) {
     res.json({ success: true, data });
   } catch (error) {
     next(error instanceof ApiError ? error : new ApiError(500, 'Error al desactivar perfil'));
+  }
+}
+
+export async function patchComposer(req, res, next) {
+  try {
+    const data = await updateProfileDescription(req, 'composer', req.body?.description);
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error instanceof ApiError ? error : new ApiError(500, 'Error al actualizar descripción'));
+  }
+}
+
+export async function patchDirector(req, res, next) {
+  try {
+    const data = await updateProfileDescription(req, 'director', req.body?.description);
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error instanceof ApiError ? error : new ApiError(500, 'Error al actualizar descripción'));
+  }
+}
+
+export async function patchArtist(req, res, next) {
+  try {
+    const data = await updateProfileDescription(req, 'artist', req.body?.description);
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error instanceof ApiError ? error : new ApiError(500, 'Error al actualizar descripción'));
   }
 }

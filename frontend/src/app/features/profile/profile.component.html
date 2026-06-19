@@ -30,7 +30,57 @@
             <article class="oa-card profile__card profile__card--active">
               <span class="oa-badge oa-badge--blue">Activo</span>
               <h4>{{ item.label }}</h4>
-              <p class="oa-text-secondary">{{ item.description }}</p>
+              <p class="profile__role-hint oa-text-muted">{{ item.description }}</p>
+
+              @if (editingType() === item.type) {
+                <label class="oa-label" [for]="'profile-bio-' + item.type">Descripción pública</label>
+                <textarea
+                  [id]="'profile-bio-' + item.type"
+                  class="oa-input profile__bio-input"
+                  rows="3"
+                  [name]="'profile-bio-' + item.type"
+                  placeholder="Escribe una breve descripción sobre ti..."
+                  [ngModel]="editDraft()"
+                  (ngModelChange)="editDraft.set($event)"
+                ></textarea>
+                <div class="profile__bio-actions">
+                  <button
+                    class="oa-btn oa-btn--primary"
+                    type="button"
+                    [disabled]="savingDescription() === item.type"
+                    (click)="saveDescription(item.type)"
+                  >
+                    {{
+                      savingDescription() === item.type ? 'Guardando...' : 'Guardar'
+                    }}
+                  </button>
+                  <button
+                    class="oa-btn oa-btn--secondary"
+                    type="button"
+                    [disabled]="savingDescription() === item.type"
+                    (click)="cancelEditDescription()"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              } @else {
+                <div class="profile__bio">
+                  <span class="oa-label">Descripción pública</span>
+                  @if (item.profileDescription) {
+                    <p class="oa-text-secondary profile__bio-text">{{ item.profileDescription }}</p>
+                  } @else {
+                    <p class="oa-text-muted profile__bio-empty">Sin descripción.</p>
+                  }
+                  <button
+                    class="oa-btn oa-btn--ghost profile__bio-edit"
+                    type="button"
+                    (click)="startEditDescription(item)"
+                  >
+                    Editar descripción
+                  </button>
+                </div>
+              }
+
               @if (item.canDeactivate) {
                 <button
                   class="oa-btn oa-btn--ghost profile__deactivate"

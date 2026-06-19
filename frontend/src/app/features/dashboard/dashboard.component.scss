@@ -33,13 +33,9 @@
 
 .dashboard__stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: $space-5;
   margin-bottom: $space-10;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
 }
 
 .stat {
@@ -60,10 +56,6 @@
     letter-spacing: $tracking-wider;
     text-transform: uppercase;
     color: $color-text-muted;
-  }
-
-  &--accent .stat__value {
-    color: $color-gold-muted;
   }
 }
 
