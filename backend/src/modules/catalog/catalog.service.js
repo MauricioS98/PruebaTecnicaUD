@@ -14,6 +14,7 @@ import sequelize, {
 } from '../../models/index.js';
 import { setAuditUser } from '../../utils/audit.js';
 import { ApiError } from '../../utils/ApiError.js';
+import { deleteScoreFile } from '../../utils/scoreFiles.js';
 
 const workIncludes = [
   {
@@ -42,6 +43,15 @@ export async function getWorkById(id) {
 }
 
 export async function createWork(payload, user) {
+  const userComposer = await Composer.findOne({ where: { id_user: user.id_user } });
+  if (!userComposer) {
+    throw new ApiError(403, 'Se requiere el perfil de Compositor para crear obras');
+  }
+
+  const composerIds = [
+    ...new Set([userComposer.id_composer, ...(payload.composerIds ?? [])]),
+  ];
+
   return sequelize.transaction(async (transaction) => {
     await setAuditUser(user.email, transaction);
 
@@ -50,19 +60,18 @@ export async function createWork(payload, user) {
         name: payload.name,
         description: payload.description ?? '',
         write_date: payload.write_date,
+        score_pdf_url: payload.score_pdf_url ?? null,
       },
       { transaction }
     );
 
-    if (payload.composerIds?.length) {
-      await Composition.bulkCreate(
-        payload.composerIds.map((id_composer) => ({
-          id_work: work.id_work,
-          id_composer,
-        })),
-        { transaction }
-      );
-    }
+    await Composition.bulkCreate(
+      composerIds.map((id_composer) => ({
+        id_work: work.id_work,
+        id_composer,
+      })),
+      { transaction }
+    );
 
     if (payload.genreIds?.length) {
       await WorkGenre.bulkCreate(
@@ -85,11 +94,15 @@ export async function updateWork(id, payload, user) {
     const work = await Work.findByPk(id, { transaction });
     if (!work) throw new ApiError(404, 'Obra no encontrada');
 
+    const previousPdf = work.score_pdf_url;
+
     await work.update(
       {
         name: payload.name ?? work.name,
         description: payload.description ?? work.description,
         write_date: payload.write_date ?? work.write_date,
+        score_pdf_url:
+          payload.score_pdf_url !== undefined ? payload.score_pdf_url : work.score_pdf_url,
       },
       { transaction }
     );
@@ -110,6 +123,14 @@ export async function updateWork(id, payload, user) {
       );
     }
 
+    if (
+      payload.score_pdf_url &&
+      previousPdf &&
+      previousPdf !== payload.score_pdf_url
+    ) {
+      await deleteScoreFile(previousPdf);
+    }
+
     return getWorkById(id);
   });
 }
@@ -119,7 +140,9 @@ export async function deleteWork(id, user) {
     await setAuditUser(user.email, transaction);
     const work = await Work.findByPk(id, { transaction });
     if (!work) throw new ApiError(404, 'Obra no encontrada');
+    const scorePdfUrl = work.score_pdf_url;
     await work.destroy({ transaction });
+    await deleteScoreFile(scorePdfUrl);
     return { deleted: true };
   });
 }

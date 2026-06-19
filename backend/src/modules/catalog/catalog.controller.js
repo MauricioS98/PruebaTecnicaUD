@@ -1,4 +1,5 @@
 import * as catalogService from './catalog.service.js';
+import { parseWorkPayload } from '../../middlewares/uploadScore.js';
 
 export async function listWorks(_req, res, next) {
   try {
@@ -20,7 +21,7 @@ export async function getWork(req, res, next) {
 
 export async function createWork(req, res, next) {
   try {
-    const data = await catalogService.createWork(req.body, req.user);
+    const data = await catalogService.createWork(parseWorkPayload(req), req.user);
     res.status(201).json({ success: true, data });
   } catch (error) {
     next(error);
@@ -29,7 +30,7 @@ export async function createWork(req, res, next) {
 
 export async function updateWork(req, res, next) {
   try {
-    const data = await catalogService.updateWork(req.params.id, req.body, req.user);
+    const data = await catalogService.updateWork(req.params.id, parseWorkPayload(req), req.user);
     res.json({ success: true, data });
   } catch (error) {
     next(error);

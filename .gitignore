@@ -26,6 +26,10 @@ Thumbs.db
 !.vscode/extensions.json
 .idea/
 
-# Package locks (optional - user had package-lock in gitignore)
+# Uploads (partituras PDF)
+backend/uploads/scores/*
+!backend/uploads/scores/.gitkeep
+
+# Package locks
 package-lock.json
 backend/package-lock.json

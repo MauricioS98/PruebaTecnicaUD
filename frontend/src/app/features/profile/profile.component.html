@@ -31,6 +31,17 @@
               <span class="oa-badge oa-badge--blue">Activo</span>
               <h4>{{ item.label }}</h4>
               <p class="oa-text-secondary">{{ item.description }}</p>
+              @if (item.canDeactivate) {
+                <button
+                  class="oa-btn oa-btn--ghost profile__deactivate"
+                  [disabled]="deactivating() === item.type"
+                  (click)="deactivate(item.type)"
+                >
+                  {{ deactivating() === item.type ? 'Desactivando...' : 'Desactivar perfil' }}
+                </button>
+              } @else if (item.deactivateBlockedReason) {
+                <p class="profile__blocked oa-text-muted">{{ item.deactivateBlockedReason }}</p>
+              }
             </article>
           }
         </div>

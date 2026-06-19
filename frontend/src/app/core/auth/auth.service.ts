@@ -33,6 +33,12 @@ export class AuthService {
   readonly token = computed(() => this.tokenSignal());
   readonly isOyente = computed(() => this.userSignal()?.isOyente ?? true);
   readonly canWrite = computed(() => (this.userSignal()?.profiles?.length ?? 0) > 0);
+  readonly isComposer = computed(() =>
+    this.userSignal()?.profiles?.some((p) => p.type === 'composer') ?? false
+  );
+  readonly composerProfileId = computed(
+    () => this.userSignal()?.profiles?.find((p) => p.type === 'composer')?.id ?? null
+  );
 
   getHomePath(): string {
     return this.canWrite() ? '/dashboard' : '/works';

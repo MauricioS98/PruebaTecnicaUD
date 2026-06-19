@@ -43,11 +43,34 @@ export interface Artist {
   id_user?: number | null;
 }
 
+export interface Genre {
+  id_genre: number;
+  name: string;
+  description?: string;
+}
+
+export interface CreateWorkPayload {
+  name: string;
+  description?: string;
+  write_date: string;
+  composerIds: number[];
+  genreIds?: number[];
+  scorePdf?: File | null;
+}
+
+export interface CatalogData {
+  genres: Genre[];
+  types: unknown[];
+  instruments: unknown[];
+  typeInstruments: unknown[];
+}
+
 export interface Work {
   id_work: number;
   name: string;
   description: string;
   write_date: string;
+  score_pdf_url?: string | null;
   composers?: Composer[];
   genres?: { id_genre: number; name: string }[];
 }

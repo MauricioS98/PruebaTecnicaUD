@@ -19,6 +19,7 @@ export const Work = sequelize.define('work', {
   name: { type: DataTypes.STRING(255), allowNull: false },
   description: { type: DataTypes.TEXT, allowNull: false, defaultValue: '' },
   write_date: { type: DataTypes.DATEONLY, allowNull: false },
+  score_pdf_url: { type: DataTypes.STRING(512), allowNull: true },
 });
 
 export const Composition = sequelize.define('composition', {

@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { authJwt } from '../../middlewares/authJwt.js';
 import { requireWriteAccess } from '../../middlewares/requireWrite.js';
+import { requireComposerProfile } from '../../middlewares/requireComposer.js';
+import { uploadScorePdf, handleUploadError } from '../../middlewares/uploadScore.js';
 import * as ctrl from './catalog.controller.js';
 
 const router = Router();
@@ -9,9 +11,23 @@ router.get('/catalogs', authJwt, ctrl.listCatalogs);
 
 router.get('/works', authJwt, ctrl.listWorks);
 router.get('/works/:id', authJwt, ctrl.getWork);
-router.post('/works', authJwt, requireWriteAccess, ctrl.createWork);
-router.put('/works/:id', authJwt, requireWriteAccess, ctrl.updateWork);
-router.delete('/works/:id', authJwt, requireWriteAccess, ctrl.deleteWork);
+router.post(
+  '/works',
+  authJwt,
+  requireComposerProfile,
+  uploadScorePdf,
+  handleUploadError,
+  ctrl.createWork
+);
+router.put(
+  '/works/:id',
+  authJwt,
+  requireComposerProfile,
+  uploadScorePdf,
+  handleUploadError,
+  ctrl.updateWork
+);
+router.delete('/works/:id', authJwt, requireComposerProfile, ctrl.deleteWork);
 
 router.get('/composers', authJwt, ctrl.listComposers);
 router.put('/composers/:id', authJwt, requireWriteAccess, ctrl.updateComposer);

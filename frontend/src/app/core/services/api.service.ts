@@ -1,7 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { Artist, Director, Interpretation, Work } from '../models/api.models';
+import {
+  Artist,
+  CatalogData,
+  Composer,
+  Director,
+  Interpretation,
+  Work,
+} from '../models/api.models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -10,6 +17,10 @@ export class ApiService {
 
   getWorks() {
     return this.http.get<{ success: boolean; data: Work[] }>(`${this.base}/works`);
+  }
+
+  createWork(formData: FormData) {
+    return this.http.post<{ success: boolean; data: Work }>(`${this.base}/works`, formData);
   }
 
   getInterpretations(params?: { artistId?: number; directorId?: number; workId?: number }) {
@@ -24,11 +35,11 @@ export class ApiService {
   }
 
   getCatalogs() {
-    return this.http.get<{ success: boolean; data: Record<string, unknown[]> }>(`${this.base}/catalogs`);
+    return this.http.get<{ success: boolean; data: CatalogData }>(`${this.base}/catalogs`);
   }
 
   getComposers() {
-    return this.http.get<{ success: boolean; data: unknown[] }>(`${this.base}/composers`);
+    return this.http.get<{ success: boolean; data: Composer[] }>(`${this.base}/composers`);
   }
 
   getDirectors() {

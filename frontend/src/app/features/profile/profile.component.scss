@@ -78,6 +78,27 @@
   }
 }
 
+.profile__deactivate {
+  margin-top: auto;
+  width: 100%;
+  color: #f0a0a0;
+
+  &:hover:not(:disabled) {
+    color: #ffb8b8;
+    background: rgba(220, 80, 80, 0.1);
+  }
+}
+
+.profile__blocked {
+  margin-top: auto;
+  font-size: $text-xs;
+  line-height: 1.5;
+  padding: $space-3;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+}
+
 .profile__error {
   margin-top: $space-4;
   padding: $space-3 $space-4;

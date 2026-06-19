@@ -1,4 +1,4 @@
-import { getProfileStatus, activateProfile } from './profile.service.js';
+import { getProfileStatus, activateProfile, deactivateProfile } from './profile.service.js';
 import { ApiError } from '../../utils/ApiError.js';
 
 export async function status(req, res, next) {
@@ -34,5 +34,32 @@ export async function activateArtist(req, res, next) {
     res.status(201).json({ success: true, data });
   } catch (error) {
     next(error instanceof ApiError ? error : new ApiError(500, 'Error al activar perfil'));
+  }
+}
+
+export async function deactivateComposer(req, res, next) {
+  try {
+    const data = await deactivateProfile(req, 'composer');
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error instanceof ApiError ? error : new ApiError(500, 'Error al desactivar perfil'));
+  }
+}
+
+export async function deactivateDirector(req, res, next) {
+  try {
+    const data = await deactivateProfile(req, 'director');
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error instanceof ApiError ? error : new ApiError(500, 'Error al desactivar perfil'));
+  }
+}
+
+export async function deactivateArtist(req, res, next) {
+  try {
+    const data = await deactivateProfile(req, 'artist');
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error instanceof ApiError ? error : new ApiError(500, 'Error al desactivar perfil'));
   }
 }

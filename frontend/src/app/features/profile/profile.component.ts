@@ -16,6 +16,7 @@ export class ProfileComponent implements OnInit {
   readonly status = signal<ProfileStatus | null>(null);
   readonly loading = signal(true);
   readonly activating = signal<ProfileType | null>(null);
+  readonly deactivating = signal<ProfileType | null>(null);
   readonly error = signal<string | null>(null);
 
   async ngOnInit(): Promise<void> {
@@ -57,6 +58,25 @@ export class ProfileComponent implements OnInit {
       this.error.set(message);
     } finally {
       this.activating.set(null);
+    }
+  }
+
+  async deactivate(type: ProfileType): Promise<void> {
+    this.deactivating.set(type);
+    this.error.set(null);
+    try {
+      const data = await this.profileService.deactivate(type);
+      this.status.set(data);
+      if (data.user) {
+        this.auth.refreshUser(data.user);
+      }
+    } catch (err: unknown) {
+      const message =
+        (err as { error?: { message?: string } })?.error?.message ??
+        'No se pudo desactivar el perfil';
+      this.error.set(message);
+    } finally {
+      this.deactivating.set(null);
     }
   }
 }

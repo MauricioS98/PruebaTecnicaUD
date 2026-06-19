@@ -9,6 +9,9 @@ export interface ProfileOption {
   label: string;
   description: string;
   id?: number;
+  canDeactivate?: boolean;
+  deactivateBlockedReason?: string | null;
+  usageCount?: number;
 }
 
 export interface ProfileStatus {
@@ -35,6 +38,12 @@ export class ProfileService {
   activate(type: ProfileType) {
     return firstValueFrom(
       this.http.post<{ success: boolean; data: ProfileStatus }>(`${this.base}/${type}`, {})
+    ).then((r) => r.data);
+  }
+
+  deactivate(type: ProfileType) {
+    return firstValueFrom(
+      this.http.delete<{ success: boolean; data: ProfileStatus }>(`${this.base}/${type}`)
     ).then((r) => r.data);
   }
 }

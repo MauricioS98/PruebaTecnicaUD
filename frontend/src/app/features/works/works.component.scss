@@ -1,1 +1,91 @@
 @use '../catalog/catalog-page';
+@use '../../../styles/tokens' as *;
+
+.works__header-actions {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+}
+
+.works-form {
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.works-form__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-6;
+
+  h3 {
+    font-size: $text-2xl;
+    margin-top: $space-1;
+  }
+}
+
+.works-form__field {
+  margin-bottom: $space-5;
+}
+
+.works-form__textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.works-form__hint {
+  font-size: $text-xs;
+  margin-bottom: $space-3;
+}
+
+.works-form__checks {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.works-form__check {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  font-size: $text-sm;
+  color: $color-text-secondary;
+  cursor: pointer;
+
+  input {
+    accent-color: $color-gold-muted;
+  }
+
+  input:disabled + span {
+    color: $color-text-primary;
+  }
+}
+
+.works-form__file {
+  padding: $space-2;
+  cursor: pointer;
+}
+
+.works-form__file-name {
+  margin-top: $space-2;
+  font-size: $text-xs;
+}
+
+.works__pdf-link {
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  color: $color-gold-muted;
+
+  &:hover {
+    color: $color-text-primary;
+  }
+}
+
+.works-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-3;
+  margin-top: $space-6;
+}

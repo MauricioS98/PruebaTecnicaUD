@@ -4,9 +4,15 @@
       <p class="catalog-page__eyebrow">Catálogo</p>
       <h2 class="oa-font-display">Obras</h2>
     </div>
-    @if (!auth.canWrite()) {
-      <span class="oa-badge oa-badge--neutral">Solo lectura</span>
-    }
+    <div class="works__header-actions">
+      @if (auth.isComposer()) {
+        <button class="oa-btn oa-btn--primary" type="button" (click)="openForm()">
+          Nueva obra
+        </button>
+      } @else if (!auth.canWrite()) {
+        <span class="oa-badge oa-badge--neutral">Solo lectura</span>
+      }
+    </div>
   </header>
 
   @if (loading()) {
@@ -34,6 +40,7 @@
               <th>Fecha</th>
               <th>Compositores</th>
               <th>Géneros</th>
+              <th>Partitura</th>
               <th>Descripción</th>
             </tr>
           </thead>
@@ -61,6 +68,15 @@
                   </div>
                 </td>
                 <td>
+                  @if (scoreUrl(work); as pdfUrl) {
+                    <a class="works__pdf-link" [href]="pdfUrl" target="_blank" rel="noopener">
+                      Ver PDF
+                    </a>
+                  } @else {
+                    <span class="oa-text-muted">—</span>
+                  }
+                </td>
+                <td>
                   <span class="catalog-page__desc oa-text-secondary">
                     {{ work.description || 'Sin descripción' }}
                   </span>
@@ -79,3 +95,125 @@
     <p class="catalog-page__error">{{ error() }}</p>
   }
 </div>
+
+@if (showForm()) {
+  <div class="oa-modal-backdrop" (click)="closeForm()">
+    <div class="oa-modal works-form" role="dialog" (click)="$event.stopPropagation()">
+      <header class="works-form__head">
+        <div>
+          <p class="catalog-page__eyebrow">Compositor</p>
+          <h3 class="oa-font-display">Registrar obra</h3>
+        </div>
+        <button class="oa-btn oa-btn--ghost" type="button" (click)="closeForm()">✕</button>
+      </header>
+
+      <div class="works-form__field">
+        <label class="oa-label" for="work-name">Nombre de la obra</label>
+        <input
+          id="work-name"
+          class="oa-input"
+          type="text"
+          placeholder="Ej. Sinfonía No. 5 en do menor"
+          [value]="formName()"
+          (input)="formName.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="works-form__field">
+        <label class="oa-label" for="work-date">Fecha de composición</label>
+        <input
+          id="work-date"
+          class="oa-input"
+          type="date"
+          [value]="formDate()"
+          (input)="formDate.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="works-form__field">
+        <label class="oa-label" for="work-desc">Descripción</label>
+        <textarea
+          id="work-desc"
+          class="oa-input works-form__textarea"
+          rows="3"
+          placeholder="Notas sobre la obra..."
+          [value]="formDescription()"
+          (input)="formDescription.set($any($event.target).value)"
+        ></textarea>
+      </div>
+
+      <div class="works-form__field">
+        <label class="oa-label" for="work-pdf">Partitura (PDF)</label>
+        <input
+          id="work-pdf"
+          class="oa-input works-form__file"
+          type="file"
+          accept="application/pdf,.pdf"
+          (change)="onScoreSelected($event)"
+        />
+        @if (selectedScoreName()) {
+          <p class="works-form__file-name oa-text-muted">{{ selectedScoreName() }}</p>
+        }
+      </div>
+
+      <div class="works-form__field">
+        <span class="oa-label">Compositores</span>
+        <p class="works-form__hint oa-text-muted">
+          Tu perfil se incluye automáticamente. Puedes añadir coautores.
+        </p>
+        <div class="works-form__checks">
+          @for (composer of composers(); track composer.id_composer) {
+            <label class="works-form__check">
+              <input
+                type="checkbox"
+                [checked]="isComposerSelected(composer.id_composer)"
+                [disabled]="composer.id_composer === myComposerId()"
+                (change)="toggleComposer(composer.id_composer)"
+              />
+              <span>
+                {{ composer.nickname }}
+                @if (composer.id_composer === myComposerId()) {
+                  <em class="oa-text-muted"> (tú)</em>
+                }
+              </span>
+            </label>
+          }
+        </div>
+      </div>
+
+      <div class="works-form__field">
+        <span class="oa-label">Géneros</span>
+        <div class="works-form__checks">
+          @for (genre of genres(); track genre.id_genre) {
+            <label class="works-form__check">
+              <input
+                type="checkbox"
+                [checked]="isGenreSelected(genre.id_genre)"
+                (change)="toggleGenre(genre.id_genre)"
+              />
+              <span>{{ genre.name }}</span>
+            </label>
+          }
+        </div>
+      </div>
+
+      @if (formError()) {
+        <p class="catalog-page__error">{{ formError() }}</p>
+      }
+
+      <div class="works-form__actions">
+        <button class="oa-btn oa-btn--secondary" type="button" (click)="closeForm()">
+          Cancelar
+        </button>
+        <button
+          class="oa-btn oa-btn--primary"
+          type="button"
+          [disabled]="saving()"
+          (click)="submitWork()"
+        >
+          {{ saving() ? 'Guardando...' : 'Registrar obra' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
