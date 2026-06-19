@@ -5,6 +5,8 @@ import {
   Artist,
   CatalogData,
   Composer,
+  AdminUser,
+  DashboardData,
   Director,
   Interpretation,
   Work,
@@ -17,6 +19,21 @@ export class ApiService {
 
   getWorks() {
     return this.http.get<{ success: boolean; data: Work[] }>(`${this.base}/works`);
+  }
+
+  getDashboard() {
+    return this.http.get<{ success: boolean; data: DashboardData }>(`${this.base}/dashboard`);
+  }
+
+  getAdminUsers() {
+    return this.http.get<{ success: boolean; data: AdminUser[] }>(`${this.base}/admin/users`);
+  }
+
+  setUserAdminStatus(userId: number, isAdmin: boolean) {
+    return this.http.patch<{ success: boolean; data: AdminUser }>(
+      `${this.base}/admin/users/${userId}`,
+      { isAdmin }
+    );
   }
 
   createWork(formData: FormData) {

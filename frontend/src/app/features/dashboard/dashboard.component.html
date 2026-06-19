@@ -1,8 +1,15 @@
 <div class="dashboard">
   <header class="dashboard__header">
     <div>
-      <p class="dashboard__eyebrow">Panel administrativo</p>
+      <p class="dashboard__eyebrow">
+        {{ isAdminView() ? 'Panel administrativo' : 'Mi panel' }}
+      </p>
       <h2>Bienvenido, {{ auth.currentUser()?.name }}</h2>
+      @if (!isAdminView()) {
+        <p class="dashboard__subtitle oa-text-secondary">
+          Aquí ves solo tu actividad: obras publicadas e interpretaciones vinculadas a tu perfil.
+        </p>
+      }
     </div>
     <button class="oa-btn oa-btn--ghost" (click)="auth.logout()">Cerrar sesión</button>
   </header>
@@ -11,14 +18,20 @@
     <p class="oa-text-muted">Cargando repertorio...</p>
   } @else {
     <section class="dashboard__stats">
-      <article class="oa-card oa-card--interactive stat">
-        <span class="stat__value">{{ works().length }}</span>
-        <span class="stat__label">Obras</span>
-      </article>
-      <article class="oa-card oa-card--interactive stat">
-        <span class="stat__value">{{ interpretations().length }}</span>
-        <span class="stat__label">Interpretaciones</span>
-      </article>
+      @if (showWorks()) {
+        <article class="oa-card oa-card--interactive stat">
+          <span class="stat__value">{{ works().length }}</span>
+          <span class="stat__label">{{ isAdminView() ? 'Obras totales' : 'Mis obras' }}</span>
+        </article>
+      }
+      @if (showInterpretations()) {
+        <article class="oa-card oa-card--interactive stat">
+          <span class="stat__value">{{ interpretations().length }}</span>
+          <span class="stat__label">
+            {{ isAdminView() ? 'Interpretaciones totales' : 'Mis interpretaciones' }}
+          </span>
+        </article>
+      }
       <article class="oa-card oa-card--interactive stat stat--accent">
         <span class="stat__value">∞</span>
         <span class="stat__label">Armonía</span>
@@ -26,61 +39,140 @@
     </section>
 
     <section class="dashboard__grid">
-      <div class="dashboard__section">
-        <div class="dashboard__section-head">
-          <h3>Obras registradas</h3>
-          <span class="oa-badge oa-badge--gold">Catálogo</span>
-        </div>
-        <div class="oa-table-wrap">
-          <table class="oa-table">
-            <thead>
-              <tr>
-                <th>Obra</th>
-                <th>Fecha</th>
-                <th>Compositores</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (work of works(); track work.id_work) {
-                <tr>
-                  <td>
-                    <strong>{{ work.name }}</strong>
-                  </td>
-                  <td>{{ work.write_date }}</td>
-                  <td>
-                    @for (c of work.composers; track c.id_composer) {
-                      <span class="oa-badge oa-badge--neutral">{{ c.nickname }}</span>
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="dashboard__section">
-        <div class="dashboard__section-head">
-          <h3>Interpretaciones recientes</h3>
-          <span class="oa-badge oa-badge--blue">En vivo</span>
-        </div>
-        <div class="interp-list">
-          @for (item of interpretations().slice(0, 6); track item.id_interpretation) {
-            <article class="oa-card interp-card">
-              <div>
-                <h4 class="oa-font-display">{{ item.work?.name }}</h4>
-                <p class="oa-text-secondary">
-                  {{ item.director?.nickname ?? 'Director desconocido' }}
-                  · {{ item.load_file_date }}
-                </p>
-              </div>
-              <span class="oa-badge oa-badge--neutral">
-                {{ item.type_interpretation?.name ?? 'Histórico' }}
-              </span>
-            </article>
+      @if (showWorks()) {
+        <div class="dashboard__section">
+          <div class="dashboard__section-head">
+            <h3>{{ isAdminView() ? 'Obras registradas' : 'Mis obras publicadas' }}</h3>
+            <span class="oa-badge oa-badge--gold">Catálogo</span>
+          </div>
+          @if (works().length) {
+            <div class="oa-table-wrap">
+              <table class="oa-table">
+                <thead>
+                  <tr>
+                    <th>Obra</th>
+                    <th>Fecha</th>
+                    <th>Compositores</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (work of works(); track work.id_work) {
+                    <tr>
+                      <td><strong>{{ work.name }}</strong></td>
+                      <td>{{ work.write_date }}</td>
+                      <td>
+                        @for (c of work.composers; track c.id_composer) {
+                          <span class="oa-badge oa-badge--neutral">{{ c.nickname }}</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="oa-text-muted">No tienes obras publicadas todavía.</p>
           }
         </div>
-      </div>
+      }
+
+      @if (showInterpretations()) {
+        <div class="dashboard__section">
+          <div class="dashboard__section-head">
+            <h3>{{ isAdminView() ? 'Interpretaciones recientes' : 'Mis interpretaciones' }}</h3>
+            <span class="oa-badge oa-badge--blue">En vivo</span>
+          </div>
+          @if (interpretations().length) {
+            <div class="interp-list">
+              @for (item of interpretations().slice(0, 6); track item.id_interpretation) {
+                <article class="oa-card interp-card">
+                  <div>
+                    <h4 class="oa-font-display">{{ item.work?.name }}</h4>
+                    <p class="oa-text-secondary">
+                      {{ item.director?.nickname ?? 'Director no registrado' }}
+                      · {{ item.load_file_date }}
+                    </p>
+                  </div>
+                  <span class="oa-badge oa-badge--neutral">
+                    {{ item.type_interpretation?.name ?? 'Histórico' }}
+                  </span>
+                </article>
+              }
+            </div>
+          } @else {
+            <p class="oa-text-muted">No tienes interpretaciones registradas todavía.</p>
+          }
+        </div>
+      }
     </section>
+
+    @if (isAdminView()) {
+      <section class="dashboard__section dashboard__section--full">
+        <div class="dashboard__section-head">
+          <h3>Administradores</h3>
+          <span class="oa-badge oa-badge--gold">Solo admin</span>
+        </div>
+        <p class="dashboard__admin-hint oa-text-secondary">
+          Solo un administrador puede nombrar o quitar el rol de admin a otro usuario.
+        </p>
+
+        @if (usersLoading()) {
+          <p class="oa-text-muted">Cargando usuarios...</p>
+        } @else if (users().length) {
+          <div class="oa-table-wrap">
+            <table class="oa-table">
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Correo</th>
+                  <th>Perfil</th>
+                  <th>Admin</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (user of users(); track user.id) {
+                  <tr>
+                    <td><strong>{{ user.name }}</strong></td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.profileLabel }}</td>
+                    <td>
+                      @if (isSelf(user) && user.isAdmin) {
+                        <span class="oa-badge oa-badge--gold">Tú (admin)</span>
+                      } @else {
+                        <button
+                          class="oa-btn"
+                          [class.oa-btn--primary]="!user.isAdmin"
+                          [class.oa-btn--ghost]="user.isAdmin"
+                          [disabled]="updatingUserId() === user.id"
+                          (click)="toggleAdmin(user)"
+                        >
+                          {{
+                            updatingUserId() === user.id
+                              ? 'Guardando...'
+                              : user.isAdmin
+                                ? 'Quitar admin'
+                                : 'Hacer admin'
+                          }}
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="oa-text-muted">No hay usuarios registrados.</p>
+        }
+
+        @if (adminError()) {
+          <p class="catalog-page__error">{{ adminError() }}</p>
+        }
+      </section>
+    }
+  }
+
+  @if (error()) {
+    <p class="catalog-page__error">{{ error() }}</p>
   }
 </div>

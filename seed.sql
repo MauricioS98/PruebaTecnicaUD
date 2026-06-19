@@ -73,11 +73,11 @@ RESTART IDENTITY CASCADE;
 -- Usuarios
 -- ---------------------------------------------------------------------------
 
-INSERT INTO user_app (name, email) VALUES
-    ('Administrador Sistema', 'admin@sistema.local'),
-    ('Ana García',            'ana.garcia@musica.local'),
-    ('Carlos Ruiz',           'carlos.ruiz@musica.local'),
-    ('Laura Méndez',          'laura.mendez@musica.local');
+INSERT INTO user_app (name, email, is_admin) VALUES
+    ('Administrador Sistema', 'admin@sistema.local', true),
+    ('Ana García',            'ana.garcia@musica.local', false),
+    ('Carlos Ruiz',           'carlos.ruiz@musica.local', false),
+    ('Laura Méndez',          'laura.mendez@musica.local', false);
 
 -- ---------------------------------------------------------------------------
 -- Tipos de interpretación

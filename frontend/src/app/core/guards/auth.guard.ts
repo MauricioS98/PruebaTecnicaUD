@@ -28,7 +28,7 @@ export const dashboardGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  if (auth.canWrite()) {
+  if (auth.canWrite() || auth.isAdmin()) {
     return true;
   }
 

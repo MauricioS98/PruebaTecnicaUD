@@ -10,6 +10,7 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
+  isAdmin?: boolean;
   profiles: UserProfile[];
   isOyente: boolean;
   isViewer?: boolean;
@@ -76,6 +77,22 @@ export interface CatalogInstrument {
   id_instrument: number;
   name: string;
   id_type_instrument: number;
+}
+
+export interface DashboardData {
+  scope: 'admin' | 'personal';
+  works: Work[];
+  interpretations: Interpretation[];
+  showWorks: boolean;
+  showInterpretations: boolean;
+}
+
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  isAdmin: boolean;
+  profileLabel: string;
 }
 
 export interface Work {

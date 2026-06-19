@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import authRoutes from './modules/auth/auth.routes.js';
 import profileRoutes from './modules/profile/profile.routes.js';
+import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
+import adminRoutes from './modules/admin/admin.routes.js';
 import catalogRoutes from './modules/catalog/catalog.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { ensureScoresDir, SCORES_DIR } from './utils/scoreFiles.js';
@@ -35,6 +37,8 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api', catalogRoutes);
 
 app.use(errorHandler);

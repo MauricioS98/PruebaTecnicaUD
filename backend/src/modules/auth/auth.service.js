@@ -67,6 +67,7 @@ async function buildAuthResponse(user, extra = {}) {
       id: user.id_user,
       name: user.name,
       email: user.email,
+      isAdmin: !!user.is_admin,
       ...context,
       ...extra,
     },
@@ -118,6 +119,7 @@ export async function getCurrentUser(req) {
     id: req.user.id_user,
     name: req.user.name,
     email: req.user.email,
+    isAdmin: !!req.user.is_admin,
     ...context,
   };
 }

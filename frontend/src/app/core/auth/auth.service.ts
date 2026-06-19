@@ -36,6 +36,7 @@ export class AuthService {
   readonly isComposer = computed(() =>
     this.userSignal()?.profiles?.some((p) => p.type === 'composer') ?? false
   );
+  readonly isAdmin = computed(() => this.userSignal()?.isAdmin ?? false);
   readonly composerProfileId = computed(
     () => this.userSignal()?.profiles?.find((p) => p.type === 'composer')?.id ?? null
   );
@@ -47,7 +48,7 @@ export class AuthService {
   );
 
   getHomePath(): string {
-    return this.canWrite() ? '/dashboard' : '/works';
+    return this.canWrite() || this.isAdmin() ? '/dashboard' : '/works';
   }
 
   constructor(

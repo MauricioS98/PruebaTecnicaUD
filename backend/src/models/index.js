@@ -5,6 +5,7 @@ export const UserApp = sequelize.define('user_app', {
   id_user: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   name: { type: DataTypes.STRING(255), allowNull: false },
   email: { type: DataTypes.STRING(255), allowNull: false, unique: true },
+  is_admin: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
 });
 
 export const Composer = sequelize.define('composer', {

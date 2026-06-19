@@ -17,7 +17,7 @@ export class ShellComponent {
   readonly player = inject(AudioPlayerService);
 
   private readonly allNavItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '◈', requiresWrite: true },
+    { path: '/dashboard', label: 'Dashboard', icon: '◈', requiresDashboard: true },
     { path: '/profile', label: 'Mi perfil', icon: '◉', requiresWrite: false },
     { path: '/works', label: 'Obras', icon: '♫', requiresWrite: false },
     { path: '/interpretations', label: 'Interpretaciones', icon: '◎', requiresWrite: false },
@@ -26,6 +26,11 @@ export class ShellComponent {
   ];
 
   readonly navItems = computed(() =>
-    this.allNavItems.filter((item) => !item.requiresWrite || this.auth.canWrite())
+    this.allNavItems.filter((item) => {
+      if (item.requiresDashboard) {
+        return this.auth.canWrite() || this.auth.isAdmin();
+      }
+      return !item.requiresWrite || this.auth.canWrite();
+    })
   );
 }
