@@ -32,5 +32,5 @@ backend/uploads/scores/*
 backend/uploads/audio/*
 !backend/uploads/audio/.gitkeep
 
-# Package locks (frontend lock se versiona aparte si aplica)
-package-lock.json
+# Package lock solo en la raíz del monorepo (no ignora backend/package-lock.json)
+/package-lock.json
