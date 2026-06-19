@@ -1,0 +1,106 @@
+@use '../../../styles/tokens' as *;
+
+.logo-water-fill {
+  position: relative;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 56px;
+    height: 56px;
+  }
+
+  &--md {
+    width: 88px;
+    height: 88px;
+  }
+
+  &--lg {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+.logo-water-fill__base,
+.logo-water-fill__fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.logo-water-fill__base {
+  opacity: 0.22;
+}
+
+.logo-water-fill__fill-layer {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(100% 0 0 0);
+  animation: logoFillLevel 3s linear infinite;
+}
+
+.logo-water-fill__fill {
+  filter: invert(1) brightness(1.12);
+}
+
+.logo-water-fill__surface {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* Secuencia de niveles — el logo no cambia de tamaño, solo sube el “agua” */
+@keyframes logoFillLevel {
+  0%,
+  100% {
+    clip-path: inset(100% 0 0 0);
+  }
+
+  8% {
+    clip-path: inset(88% 0 0 0);
+  }
+
+  16% {
+    clip-path: inset(76% 0 0 0);
+  }
+
+  24% {
+    clip-path: inset(64% 0 0 0);
+  }
+
+  32% {
+    clip-path: inset(52% 0 0 0);
+  }
+
+  40% {
+    clip-path: inset(40% 0 0 0);
+  }
+
+  48% {
+    clip-path: inset(28% 0 0 0);
+  }
+
+  56% {
+    clip-path: inset(16% 0 0 0);
+  }
+
+  64% {
+    clip-path: inset(0 0 0 0);
+  }
+
+  80% {
+    clip-path: inset(0 0 0 0);
+  }
+}

@@ -1,0 +1,41 @@
+@use '../../../styles/tokens' as *;
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  background: rgba($color-black-deep, 0.62);
+  backdrop-filter: blur(8px);
+  pointer-events: all;
+  animation: loadingOverlayIn 0.2s ease forwards;
+}
+
+.loading-overlay__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-5;
+  padding: $space-8 $space-10;
+  border-radius: $radius-xl;
+  background: rgba($color-navy-elevated, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: $shadow-lg;
+}
+
+.loading-overlay__label {
+  font-size: $text-sm;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@keyframes loadingOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
