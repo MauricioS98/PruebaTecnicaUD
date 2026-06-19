@@ -6,7 +6,7 @@ ENV NODE_ENV=production
 
 RUN mkdir -p uploads/scores uploads/audio
 
-COPY package.json ./
+COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY src ./src
