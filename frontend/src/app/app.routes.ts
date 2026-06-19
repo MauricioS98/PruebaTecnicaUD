@@ -3,6 +3,7 @@ import { authGuard, guestGuard } from './core/guards/auth.guard';
 import { ShellComponent } from './layout/shell/shell.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { ProfileComponent } from './features/profile/profile.component';
 import {
   WorksComponent,
   InterpretationsComponent,
@@ -23,6 +24,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent },
+      { path: 'profile', component: ProfileComponent },
       { path: 'works', component: WorksComponent },
       { path: 'interpretations', component: InterpretationsComponent },
       { path: 'artists', component: ArtistsComponent },

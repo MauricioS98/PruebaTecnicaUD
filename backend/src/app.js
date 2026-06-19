@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import authRoutes from './modules/auth/auth.routes.js';
+import profileRoutes from './modules/profile/profile.routes.js';
 import catalogRoutes from './modules/catalog/catalog.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
@@ -21,6 +22,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 app.use('/api', catalogRoutes);
 
 app.use(errorHandler);

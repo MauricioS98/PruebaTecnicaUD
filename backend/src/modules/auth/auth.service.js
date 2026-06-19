@@ -47,12 +47,13 @@ export async function resolveUserProfiles(userId) {
     profiles.push({ type: 'artist', id: artist.id_artist, label: 'Artista' });
   }
 
-  const isViewer = profiles.length === 0;
+  const isOyente = profiles.length === 0;
 
   return {
     profiles,
-    isViewer,
-    profileLabel: isViewer ? 'Usuario' : profiles.map((p) => p.label).join(' · '),
+    isOyente,
+    isViewer: isOyente,
+    profileLabel: isOyente ? 'Oyente' : `Oyente · ${profiles.map((p) => p.label).join(' · ')}`,
   };
 }
 
@@ -72,31 +73,6 @@ async function buildAuthResponse(user, extra = {}) {
   };
 }
 
-async function createProfileLink(user, profileType, transaction) {
-  const nickname = user.name;
-
-  if (profileType === 'composer') {
-    await Composer.create(
-      { id_user: user.id_user, nickname, description: '' },
-      { transaction }
-    );
-  }
-
-  if (profileType === 'director') {
-    await Director.create(
-      { id_user: user.id_user, nickname, description: '' },
-      { transaction }
-    );
-  }
-
-  if (profileType === 'artist') {
-    await Artist.create(
-      { id_user: user.id_user, nickname, description: '' },
-      { transaction }
-    );
-  }
-}
-
 export async function loginWithGoogle(idToken) {
   const payload = await verifyGoogleToken(idToken);
 
@@ -113,13 +89,8 @@ export async function loginWithGoogle(idToken) {
   return buildAuthResponse(user, { picture: payload.picture ?? null });
 }
 
-export async function registerWithGoogle(idToken, profileTypes = []) {
+export async function registerWithGoogle(idToken) {
   const payload = await verifyGoogleToken(idToken);
-
-  const types = [...new Set(
-    (Array.isArray(profileTypes) ? profileTypes : [profileTypes])
-      .filter((t) => SPECIAL_PROFILE_TYPES.includes(t))
-  )];
 
   const existing = await UserApp.findOne({ where: { email: payload.email } });
   if (existing) {
@@ -129,19 +100,13 @@ export async function registerWithGoogle(idToken, profileTypes = []) {
   const user = await sequelize.transaction(async (transaction) => {
     await setAuditUser(payload.email, transaction);
 
-    const created = await UserApp.create(
+    return UserApp.create(
       {
         name: payload.name || payload.email.split('@')[0],
         email: payload.email,
       },
       { transaction }
     );
-
-    for (const profileType of types) {
-      await createProfileLink(created, profileType, transaction);
-    }
-
-    return created;
   });
 
   return buildAuthResponse(user, { picture: payload.picture ?? null, isNew: true });

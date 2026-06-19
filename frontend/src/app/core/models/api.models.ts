@@ -11,7 +11,8 @@ export interface AuthUser {
   name: string;
   email: string;
   profiles: UserProfile[];
-  isViewer: boolean;
+  isOyente: boolean;
+  isViewer?: boolean;
   profileLabel: string;
   picture?: string | null;
 }
@@ -45,25 +46,3 @@ export interface Interpretation {
     instrument?: { name: string };
   }>;
 }
-
-export const PROFILE_OPTIONS: {
-  value: ProfileType;
-  label: string;
-  description: string;
-}[] = [
-  {
-    value: 'composer',
-    label: 'Compositor',
-    description: 'Creas y gestionas obras',
-  },
-  {
-    value: 'director',
-    label: 'Director',
-    description: 'Diriges interpretaciones',
-  },
-  {
-    value: 'artist',
-    label: 'Artista',
-    description: 'Participas como intérprete',
-  },
-];

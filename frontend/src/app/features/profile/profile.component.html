@@ -1,0 +1,68 @@
+<div class="profile">
+  <header class="profile__header">
+    <div>
+      <p class="profile__eyebrow">Mi cuenta</p>
+      <h2 class="oa-font-display">Perfil y roles</h2>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="oa-text-muted">Cargando perfil...</p>
+  } @else {
+    @if (status(); as data) {
+    <section class="oa-card profile__base">
+      <div class="profile__base-head">
+        <h3>{{ auth.currentUser()?.name }}</h3>
+        <span class="oa-badge oa-badge--gold">Oyente</span>
+      </div>
+      <p class="oa-text-secondary">{{ auth.currentUser()?.email }}</p>
+      <p class="profile__hint oa-text-muted">
+        Todos los usuarios empiezan como <strong>Oyente</strong> (solo consulta).
+        Desde aquí puedes activar perfiles adicionales cuando lo necesites.
+      </p>
+    </section>
+
+    @if (data.activeProfiles.length) {
+      <section class="profile__section">
+        <h3 class="oa-font-display">Perfiles activos</h3>
+        <div class="profile__grid">
+          @for (item of data.activeProfiles; track item.type) {
+            <article class="oa-card profile__card profile__card--active">
+              <span class="oa-badge oa-badge--blue">Activo</span>
+              <h4>{{ item.label }}</h4>
+              <p class="oa-text-secondary">{{ item.description }}</p>
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    @if (data.availableProfiles.length) {
+      <section class="profile__section">
+        <h3 class="oa-font-display">Activar nuevo perfil</h3>
+        <div class="profile__grid">
+          @for (item of data.availableProfiles; track item.type) {
+            <article class="oa-card profile__card">
+              <h4>{{ item.label }}</h4>
+              <p class="oa-text-secondary">{{ item.description }}</p>
+              <button
+                class="oa-btn oa-btn--primary"
+                [disabled]="activating() === item.type"
+                (click)="activate(item.type)"
+              >
+                {{ activating() === item.type ? 'Activando...' : 'Activar perfil' }}
+              </button>
+            </article>
+          }
+        </div>
+      </section>
+    } @else {
+      <p class="oa-text-muted">Ya tienes todos los perfiles disponibles activados.</p>
+    }
+    }
+  }
+
+  @if (error()) {
+    <p class="profile__error">{{ error() }}</p>
+  }
+</div>

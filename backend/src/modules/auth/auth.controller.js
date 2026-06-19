@@ -13,11 +13,8 @@ export async function googleLogin(req, res, next) {
 
 export async function googleRegister(req, res, next) {
   try {
-    const { idToken, profileTypes, profileType } = req.body;
-    const result = await registerWithGoogle(
-      idToken,
-      profileTypes ?? (profileType && profileType !== 'viewer' ? [profileType] : [])
-    );
+    const { idToken } = req.body;
+    const result = await registerWithGoogle(idToken);
     res.status(201).json({ success: true, data: result });
   } catch (error) {
     next(error instanceof ApiError ? error : new ApiError(500, 'Error en registro'));

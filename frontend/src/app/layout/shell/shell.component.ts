@@ -15,6 +15,7 @@ export class ShellComponent {
 
   readonly navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '◈' },
+    { path: '/profile', label: 'Mi perfil', icon: '◉' },
     { path: '/works', label: 'Obras', icon: '♫' },
     { path: '/interpretations', label: 'Interpretaciones', icon: '◎' },
     { path: '/artists', label: 'Artistas', icon: '✦' },

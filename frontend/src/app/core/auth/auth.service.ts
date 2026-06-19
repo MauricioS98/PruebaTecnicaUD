@@ -3,12 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, AuthUser, ProfileType } from '../models/api.models';
+import { AuthResponse, AuthUser } from '../models/api.models';
 
 export type AuthMode = 'login' | 'register';
 
 interface GoogleSignInOptions {
-  getProfileTypes?: () => ProfileType[];
   onError?: (message: string) => void;
 }
 
@@ -32,7 +31,8 @@ export class AuthService {
   readonly isAuthenticated = computed(() => !!this.tokenSignal());
   readonly currentUser = computed(() => this.userSignal());
   readonly token = computed(() => this.tokenSignal());
-  readonly isViewer = computed(() => this.userSignal()?.isViewer ?? true);
+  readonly isOyente = computed(() => this.userSignal()?.isOyente ?? true);
+  readonly canWrite = computed(() => (this.userSignal()?.profiles?.length ?? 0) > 0);
 
   constructor(
     private readonly http: HttpClient,
@@ -53,8 +53,7 @@ export class AuthService {
       callback: async (response: { credential: string }) => {
         try {
           if (mode === 'register') {
-            const profileTypes = options.getProfileTypes?.() ?? [];
-            await this.handleGoogleRegister(response.credential, profileTypes);
+            await this.handleGoogleRegister(response.credential);
           } else {
             await this.handleGoogleLogin(response.credential);
           }
@@ -88,11 +87,11 @@ export class AuthService {
     await this.completeAuth(result.data);
   }
 
-  private async handleGoogleRegister(idToken: string, profileTypes: ProfileType[]): Promise<void> {
+  private async handleGoogleRegister(idToken: string): Promise<void> {
     const result = await firstValueFrom(
       this.http.post<{ success: boolean; data: AuthResponse }>(
         `${environment.apiUrl}/auth/google/register`,
-        { idToken, profileTypes }
+        { idToken }
       )
     );
     await this.completeAuth(result.data);
@@ -102,9 +101,13 @@ export class AuthService {
     const result = await firstValueFrom(
       this.http.get<{ success: boolean; data: AuthUser }>(`${environment.apiUrl}/auth/me`)
     );
-    this.userSignal.set(result.data);
-    sessionStorage.setItem(USER_KEY, JSON.stringify(result.data));
+    this.refreshUser(result.data);
     return result.data;
+  }
+
+  refreshUser(user: AuthUser): void {
+    this.userSignal.set(user);
+    sessionStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
   logout(): void {

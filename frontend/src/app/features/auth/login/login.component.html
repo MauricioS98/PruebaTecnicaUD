@@ -32,27 +32,13 @@
 
     @if (mode() === 'login') {
       <p class="login__desc oa-text-secondary">
-        Accede con tu cuenta de Google para consultar el repertorio orquestal.
+        Accede con Google para consultar el repertorio orquestal.
       </p>
     } @else {
       <p class="login__desc oa-text-secondary">
-        Crea tu cuenta con Google. Puedes elegir uno o varios perfiles.
-        Si no seleccionas ninguno, serás <strong>usuario de solo consulta</strong>.
+        Crea tu cuenta con Google como <strong>Oyente</strong>.
+        Podrás activar perfiles de Compositor, Director o Artista desde tu perfil.
       </p>
-
-      <div class="login__roles">
-        @for (option of profileOptions; track option.value) {
-          <button
-            type="button"
-            class="login__role"
-            [class.login__role--active]="isProfileSelected(option.value)"
-            (click)="toggleProfile(option.value)"
-          >
-            <span class="login__role-label">{{ option.label }}</span>
-            <span class="login__role-desc">{{ option.description }}</span>
-          </button>
-        }
-      </div>
     }
 
     <div id="google-btn" class="login__google"></div>
