@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const target = path.join(__dirname, '../src/environments/environment.prod.ts');
 
-const apiBase = (process.env.API_URL || 'https://REEMPLAZA-TU-SERVICIO.onrender.com').replace(
+const apiBase = (process.env.API_URL || 'https://pruebatecnicaud.onrender.com').replace(
   /\/$/,
   ''
 );
