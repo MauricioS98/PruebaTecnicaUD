@@ -64,6 +64,7 @@ export function parseWorkPayload(req) {
     name: req.body.name,
     description: req.body.description,
     write_date: req.body.write_date,
+    mode: req.body.mode,
     composerIds,
     genreIds,
     score_pdf_url: req.file ? `/uploads/scores/${req.file.filename}` : undefined,

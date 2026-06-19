@@ -34,8 +34,14 @@ async function getUserComposer(userId, transaction = null) {
   return Composer.findOne({ where: { id_user: userId }, transaction });
 }
 
-async function assertWorkOwnership(workId, userId, transaction = null) {
-  const userComposer = await getUserComposer(userId, transaction);
+async function assertWorkOwnership(workId, user, transaction = null) {
+  if (user.is_admin) {
+    const work = await Work.findByPk(workId, { transaction });
+    if (!work) throw new ApiError(404, 'Obra no encontrada');
+    return null;
+  }
+
+  const userComposer = await getUserComposer(user.id_user, transaction);
   if (!userComposer) {
     throw new ApiError(403, 'Se requiere el perfil de Compositor');
   }
@@ -50,6 +56,14 @@ async function assertWorkOwnership(workId, userId, transaction = null) {
   }
 
   return userComposer;
+}
+
+function isHistoricWork(user, payload) {
+  return !!user.is_admin && payload.mode === 'historic';
+}
+
+function normalizeComposerIds(ids) {
+  return [...new Set((ids ?? []).filter((id) => Number.isInteger(id) && id > 0))];
 }
 
 export async function listWorks() {
@@ -78,14 +92,22 @@ export async function getWorkById(id, transaction = null) {
 }
 
 export async function createWork(payload, user) {
-  const userComposer = await Composer.findOne({ where: { id_user: user.id_user } });
-  if (!userComposer) {
-    throw new ApiError(403, 'Se requiere el perfil de Compositor para crear obras');
+  if (payload.mode === 'historic' && !user.is_admin) {
+    throw new ApiError(403, 'Solo un administrador puede registrar obras históricas');
   }
 
-  const composerIds = [
-    ...new Set([userComposer.id_composer, ...(payload.composerIds ?? [])]),
-  ];
+  const isHistoric = isHistoricWork(user, payload);
+
+  let composerIds;
+  if (isHistoric) {
+    composerIds = normalizeComposerIds(payload.composerIds);
+  } else {
+    const userComposer = await Composer.findOne({ where: { id_user: user.id_user } });
+    if (!userComposer) {
+      throw new ApiError(403, 'Se requiere el perfil de Compositor para crear obras');
+    }
+    composerIds = [...new Set([userComposer.id_composer, ...(payload.composerIds ?? [])])];
+  }
 
   return sequelize.transaction(async (transaction) => {
     await setAuditUser(user.email, transaction);
@@ -100,13 +122,15 @@ export async function createWork(payload, user) {
       { transaction }
     );
 
-    await Composition.bulkCreate(
-      composerIds.map((id_composer) => ({
-        id_work: work.id_work,
-        id_composer,
-      })),
-      { transaction }
-    );
+    if (composerIds.length) {
+      await Composition.bulkCreate(
+        composerIds.map((id_composer) => ({
+          id_work: work.id_work,
+          id_composer,
+        })),
+        { transaction }
+      );
+    }
 
     if (payload.genreIds?.length) {
       await WorkGenre.bulkCreate(
@@ -126,7 +150,8 @@ export async function updateWork(id, payload, user) {
   return sequelize.transaction(async (transaction) => {
     await setAuditUser(user.email, transaction);
 
-    const userComposer = await assertWorkOwnership(id, user.id_user, transaction);
+    const userComposer = await assertWorkOwnership(id, user, transaction);
+    const isHistoric = isHistoricWork(user, payload);
 
     const work = await Work.findByPk(id, { transaction });
     if (!work) throw new ApiError(404, 'Obra no encontrada');
@@ -144,23 +169,30 @@ export async function updateWork(id, payload, user) {
       { transaction }
     );
 
-    if (payload.composerIds) {
-      const composerIds = [
-        ...new Set([userComposer.id_composer, ...payload.composerIds]),
-      ];
+    if (payload.composerIds !== undefined) {
+      let composerIds;
+      if (isHistoric || user.is_admin) {
+        composerIds = normalizeComposerIds(payload.composerIds);
+      } else {
+        composerIds = [...new Set([userComposer.id_composer, ...payload.composerIds])];
+      }
       await Composition.destroy({ where: { id_work: id }, transaction });
-      await Composition.bulkCreate(
-        composerIds.map((id_composer) => ({ id_work: id, id_composer })),
-        { transaction }
-      );
+      if (composerIds.length) {
+        await Composition.bulkCreate(
+          composerIds.map((id_composer) => ({ id_work: id, id_composer })),
+          { transaction }
+        );
+      }
     }
 
-    if (payload.genreIds) {
+    if (payload.genreIds !== undefined) {
       await WorkGenre.destroy({ where: { id_work: id }, transaction });
-      await WorkGenre.bulkCreate(
-        payload.genreIds.map((id_genre) => ({ id_work: id, id_genre })),
-        { transaction }
-      );
+      if (payload.genreIds.length) {
+        await WorkGenre.bulkCreate(
+          payload.genreIds.map((id_genre) => ({ id_work: id, id_genre })),
+          { transaction }
+        );
+      }
     }
 
     if (
@@ -178,7 +210,7 @@ export async function updateWork(id, payload, user) {
 export async function deleteWork(id, user) {
   return sequelize.transaction(async (transaction) => {
     await setAuditUser(user.email, transaction);
-    await assertWorkOwnership(id, user.id_user, transaction);
+    await assertWorkOwnership(id, user, transaction);
 
     const work = await Work.findByPk(id, { transaction });
     if (!work) throw new ApiError(404, 'Obra no encontrada');
@@ -314,8 +346,20 @@ function validateInterpretationPayload(payload, type) {
   }
 }
 
-async function assertInterpretationOwnership(id, userId, transaction = null) {
-  const userDirector = await Director.findOne({ where: { id_user: userId }, transaction });
+function isHistoricInterpretation(user, payload) {
+  return !!user.is_admin && payload.mode === 'legacy';
+}
+
+async function assertInterpretationOwnership(id, user, transaction = null) {
+  if (user.is_admin) {
+    const interpretation = await Interpretation.findByPk(id, { transaction });
+    if (!interpretation) {
+      throw new ApiError(404, 'Interpretación no encontrada');
+    }
+    return { userDirector: null, interpretation };
+  }
+
+  const userDirector = await Director.findOne({ where: { id_user: user.id_user }, transaction });
   if (!userDirector) {
     throw new ApiError(403, 'Se requiere el perfil de Director');
   }
@@ -333,13 +377,22 @@ async function assertInterpretationOwnership(id, userId, transaction = null) {
 }
 
 export async function createInterpretation(payload, user) {
-  const userDirector = await Director.findOne({ where: { id_user: user.id_user } });
-  if (!userDirector) {
-    throw new ApiError(403, 'Se requiere el perfil de Director para crear interpretaciones');
+  if (payload.mode === 'legacy' && !user.is_admin) {
+    throw new ApiError(403, 'Solo un administrador puede registrar interpretaciones históricas');
   }
 
-  if (!payload.audio_mp3_url) {
-    throw new ApiError(400, 'Debes adjuntar un archivo MP3 para la interpretación');
+  const isHistoric = isHistoricInterpretation(user, payload);
+
+  let userDirector = null;
+  if (!isHistoric) {
+    userDirector = await Director.findOne({ where: { id_user: user.id_user } });
+    if (!userDirector) {
+      throw new ApiError(403, 'Se requiere el perfil de Director para crear interpretaciones');
+    }
+
+    if (!payload.audio_mp3_url) {
+      throw new ApiError(400, 'Debes adjuntar un archivo MP3 para la interpretación');
+    }
   }
 
   return sequelize.transaction(async (transaction) => {
@@ -357,9 +410,9 @@ export async function createInterpretation(payload, user) {
       {
         id_type_interpretation: payload.id_type_interpretation ?? null,
         id_work: payload.id_work,
-        id_director: userDirector.id_director,
+        id_director: isHistoric ? null : userDirector.id_director,
         load_file_date: payload.load_file_date ?? new Date().toISOString().slice(0, 10),
-        audio_mp3_url: payload.audio_mp3_url,
+        audio_mp3_url: payload.audio_mp3_url ?? null,
       },
       { transaction }
     );
@@ -386,7 +439,8 @@ export async function updateInterpretation(id, payload, user) {
   return sequelize.transaction(async (transaction) => {
     await setAuditUser(user.email, transaction);
 
-    const { interpretation } = await assertInterpretationOwnership(id, user.id_user, transaction);
+    const { interpretation } = await assertInterpretationOwnership(id, user, transaction);
+    const isHistoric = isHistoricInterpretation(user, payload);
     const previousAudio = interpretation.audio_mp3_url;
 
     const nextTypeId =
@@ -401,13 +455,13 @@ export async function updateInterpretation(id, payload, user) {
     }
 
     if (payload.artists) {
-      validateInterpretationPayload(payload, type);
+      validateInterpretationPayload({ ...payload, mode: isHistoric ? 'legacy' : payload.mode }, type);
     }
 
     const nextAudioUrl =
       payload.audio_mp3_url !== undefined ? payload.audio_mp3_url : interpretation.audio_mp3_url;
 
-    if (!nextAudioUrl) {
+    if (!isHistoric && !nextAudioUrl) {
       throw new ApiError(400, 'La interpretación debe tener un archivo MP3');
     }
 
@@ -453,7 +507,7 @@ export async function updateInterpretation(id, payload, user) {
 export async function deleteInterpretation(id, user) {
   return sequelize.transaction(async (transaction) => {
     await setAuditUser(user.email, transaction);
-    const { interpretation } = await assertInterpretationOwnership(id, user.id_user, transaction);
+    const { interpretation } = await assertInterpretationOwnership(id, user, transaction);
     const audioUrl = interpretation.audio_mp3_url;
     await interpretation.destroy({ transaction });
     await deleteAudioFile(audioUrl);

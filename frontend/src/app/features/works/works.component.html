@@ -9,7 +9,13 @@
         <button class="oa-btn oa-btn--primary" type="button" (click)="openForm()">
           Nueva obra
         </button>
-      } @else if (!auth.canWrite()) {
+      }
+      @if (auth.isAdmin()) {
+        <button class="oa-btn oa-btn--secondary" type="button" (click)="openForm(true)">
+          Nueva obra histórica
+        </button>
+      }
+      @if (!auth.canWrite() && !auth.isAdmin()) {
         <span class="oa-badge oa-badge--neutral">Solo lectura</span>
       }
     </div>
@@ -42,7 +48,7 @@
               <th>Géneros</th>
               <th>Partitura</th>
               <th>Descripción</th>
-              @if (auth.isComposer()) {
+              @if (auth.isComposer() || auth.isAdmin()) {
                 <th>Acciones</th>
               }
             </tr>
@@ -84,9 +90,9 @@
                     {{ work.description || 'Sin descripción' }}
                   </span>
                 </td>
-                @if (auth.isComposer()) {
+                @if (auth.isComposer() || auth.isAdmin()) {
                   <td>
-                    @if (isOwnWork(work)) {
+                    @if (canManageWork(work)) {
                       <div class="works__actions">
                         <button
                           class="oa-btn oa-btn--ghost works__action-btn"
@@ -138,8 +144,22 @@
     <div class="oa-modal works-form" role="dialog" (click)="$event.stopPropagation()">
       <header class="works-form__head">
         <div>
-          <p class="catalog-page__eyebrow">Compositor</p>
-          <h3 class="oa-font-display">{{ isEditing() ? 'Editar obra' : 'Registrar obra' }}</h3>
+          <p class="catalog-page__eyebrow">
+            @if (formHistoric()) {
+              Admin · Histórica
+            } @else {
+              Compositor
+            }
+          </p>
+          <h3 class="oa-font-display">
+            @if (isEditing()) {
+              Editar obra
+            } @else if (formHistoric()) {
+              Registrar obra histórica
+            } @else {
+              Registrar obra
+            }
+          </h3>
         </div>
         <button class="oa-btn oa-btn--ghost" type="button" (click)="closeForm()">✕</button>
       </header>
@@ -203,16 +223,22 @@
 
       <div class="works-form__field">
         <span class="oa-label">Compositores</span>
-        <p class="works-form__hint oa-text-muted">
-          Tu perfil se incluye automáticamente. Busca y selecciona coautores.
-        </p>
+        @if (formHistoric()) {
+          <p class="works-form__hint oa-text-muted">
+            Opcional. Puedes dejar la obra sin compositor o añadir uno o varios.
+          </p>
+        } @else {
+          <p class="works-form__hint oa-text-muted">
+            Tu perfil se incluye automáticamente. Busca y selecciona coautores.
+          </p>
+        }
         <div class="oa-picker">
           @if (selectedComposers().length) {
             <div class="oa-picker__selected">
               @for (composer of selectedComposers(); track composer.id_composer) {
                 <span class="oa-badge oa-badge--gold oa-picker__selected-item">
                   {{ composer.nickname }}
-                  @if (composer.id_composer === myComposerId()) {
+                  @if (!formHistoric() && composer.id_composer === myComposerId()) {
                     <em class="oa-text-muted">(tú)</em>
                   } @else {
                     <button
@@ -241,11 +267,11 @@
                 type="button"
                 class="oa-picker__option"
                 [class.oa-picker__option--active]="isComposerSelected(composer.id_composer)"
-                [disabled]="composer.id_composer === myComposerId()"
+                [disabled]="!formHistoric() && composer.id_composer === myComposerId()"
                 (click)="toggleComposer(composer.id_composer)"
               >
                 {{ composer.nickname }}
-                @if (composer.id_composer === myComposerId()) {
+                @if (!formHistoric() && composer.id_composer === myComposerId()) {
                   <span class="oa-text-muted">(tú, incluido)</span>
                 }
               </button>
@@ -258,7 +284,13 @@
 
       <div class="works-form__field">
         <span class="oa-label">Géneros</span>
-        <p class="works-form__hint oa-text-muted">Busca y selecciona uno o varios géneros.</p>
+        <p class="works-form__hint oa-text-muted">
+          @if (formHistoric()) {
+            Opcional. Busca y selecciona uno o varios géneros si lo deseas.
+          } @else {
+            Busca y selecciona uno o varios géneros.
+          }
+        </p>
         <div class="oa-picker">
           @if (selectedGenres().length) {
             <div class="oa-picker__selected">

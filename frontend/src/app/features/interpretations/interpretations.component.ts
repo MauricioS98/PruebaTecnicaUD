@@ -57,6 +57,8 @@ export class InterpretationsComponent implements OnInit {
   readonly artistRows = signal<ArtistFormRow[]>([]);
   readonly audioFile = signal<File | null>(null);
   readonly audioFileName = signal<string | null>(null);
+  readonly formHistoric = signal(false);
+
   readonly existingAudioUrl = signal<string | null>(null);
 
   readonly myDirectorId = computed(() => this.auth.directorProfileId());
@@ -98,6 +100,12 @@ export class InterpretationsComponent implements OnInit {
     return this.types().find((t) => t.id_type_interpretation === id) ?? null;
   });
 
+  readonly formTypes = computed(() =>
+    this.formHistoric()
+      ? this.types()
+      : this.types().filter((t) => t.name !== 'Histórico')
+  );
+
   readonly selectedPlayableCount = computed(() =>
     this.selectedIds().filter((id) => {
       const item = this.interpretations().find((i) => i.id_interpretation === id);
@@ -135,6 +143,10 @@ export class InterpretationsComponent implements OnInit {
     const myId = this.myDirectorId();
     if (!myId) return false;
     return item.id_director === myId || item.director?.id_director === myId;
+  }
+
+  canManageInterpretation(item: Interpretation): boolean {
+    return this.isOwnInterpretation(item) || this.auth.isAdmin();
   }
 
   isSelected(id: number): boolean {
@@ -207,12 +219,13 @@ export class InterpretationsComponent implements OnInit {
     this.search.set(value);
   }
 
-  async openForm(): Promise<void> {
+  async openForm(historic = false): Promise<void> {
     this.formError.set(null);
     this.editingInterpretation.set(null);
+    this.formHistoric.set(historic);
     this.formWorkId.set(null);
     this.formTypeId.set(null);
-    this.artistRows.set([{ id_artist: 0, id_instrument: null }]);
+    this.artistRows.set(historic ? [] : [{ id_artist: 0, id_instrument: null }]);
     this.audioFile.set(null);
     this.audioFileName.set(null);
     this.existingAudioUrl.set(null);
@@ -226,10 +239,13 @@ export class InterpretationsComponent implements OnInit {
   }
 
   async openEditForm(item: Interpretation): Promise<void> {
-    if (!this.isOwnInterpretation(item)) return;
+    if (!this.canManageInterpretation(item)) return;
 
     this.formError.set(null);
     this.editingInterpretation.set(item);
+    this.formHistoric.set(
+      this.auth.isAdmin() && (this.isLegacy(item) || !item.id_director)
+    );
     this.formWorkId.set(item.id_work);
     this.formTypeId.set(item.id_type_interpretation ?? null);
     this.audioFile.set(null);
@@ -241,7 +257,9 @@ export class InterpretationsComponent implements OnInit {
             id_artist: row.id_artist,
             id_instrument: row.id_instrument ?? null,
           }))
-        : [{ id_artist: 0, id_instrument: null }]
+        : this.formHistoric()
+          ? []
+          : [{ id_artist: 0, id_instrument: null }]
     );
 
     try {
@@ -259,9 +277,7 @@ export class InterpretationsComponent implements OnInit {
       firstValueFrom(this.api.getArtists()),
     ]);
     this.works.set(worksRes.data ?? []);
-    this.types.set(
-      (catalogsRes.data?.types ?? []).filter((t) => t.name !== 'Histórico') as TypeInterpretation[]
-    );
+    this.types.set((catalogsRes.data?.types ?? []) as TypeInterpretation[]);
     this.instruments.set((catalogsRes.data?.instruments ?? []) as CatalogInstrument[]);
     this.artists.set(artistsRes.data ?? []);
   }
@@ -269,6 +285,7 @@ export class InterpretationsComponent implements OnInit {
   closeForm(): void {
     this.showForm.set(false);
     this.editingInterpretation.set(null);
+    this.formHistoric.set(false);
     this.formError.set(null);
     this.existingAudioUrl.set(null);
   }
@@ -304,12 +321,17 @@ export class InterpretationsComponent implements OnInit {
     const rows = this.artistRows().filter((r) => r.id_artist > 0);
     const formData = new FormData();
     formData.append('id_work', String(this.formWorkId()));
-    formData.append('id_type_interpretation', String(this.formTypeId()));
+    if (this.formTypeId() != null) {
+      formData.append('id_type_interpretation', String(this.formTypeId()));
+    }
     formData.append('load_file_date', this.resolveLoadFileDate());
     formData.append(
       'artists',
       JSON.stringify(rows.map((r) => ({ id_artist: r.id_artist, id_instrument: r.id_instrument })))
     );
+    if (this.formHistoric()) {
+      formData.append('mode', 'legacy');
+    }
     const audio = this.audioFile();
     if (audio) {
       formData.append('audioMp3', audio);
@@ -323,18 +345,24 @@ export class InterpretationsComponent implements OnInit {
     const type = this.selectedType();
     const rows = this.artistRows().filter((r) => r.id_artist > 0);
     const editing = this.editingInterpretation();
+    const historic = this.formHistoric();
 
-    if (!id_work || !id_type_interpretation) {
+    if (!id_work) {
+      this.formError.set('La obra es obligatoria.');
+      return;
+    }
+
+    if (!historic && !id_type_interpretation) {
       this.formError.set('Obra y tipo son obligatorios.');
       return;
     }
 
-    if (!this.audioFile() && !this.existingAudioUrl()) {
+    if (!historic && !this.audioFile() && !this.existingAudioUrl()) {
       this.formError.set('Debes adjuntar un archivo MP3.');
       return;
     }
 
-    if (type && (rows.length < type.min_artist || rows.length > type.max_artist)) {
+    if (!historic && type && (rows.length < type.min_artist || rows.length > type.max_artist)) {
       this.formError.set(
         `Este tipo requiere entre ${type.min_artist} y ${type.max_artist} artistas.`
       );
@@ -350,7 +378,7 @@ export class InterpretationsComponent implements OnInit {
       if (editing) {
         await firstValueFrom(this.api.updateInterpretation(editing.id_interpretation, formData));
       } else {
-        if (!this.audioFile()) {
+        if (!historic && !this.audioFile()) {
           this.formError.set('Debes adjuntar un archivo MP3.');
           this.saving.set(false);
           return;
@@ -370,7 +398,7 @@ export class InterpretationsComponent implements OnInit {
   }
 
   async deleteInterpretation(item: Interpretation): Promise<void> {
-    if (!this.isOwnInterpretation(item)) return;
+    if (!this.canManageInterpretation(item)) return;
 
     const confirmed = confirm(
       `¿Eliminar la interpretación de "${item.work?.name ?? 'esta obra'}"?`

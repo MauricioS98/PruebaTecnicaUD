@@ -38,6 +38,7 @@ export class WorksComponent implements OnInit {
   readonly selectedScoreFile = signal<File | null>(null);
   readonly selectedScoreName = signal<string | null>(null);
   readonly existingScoreUrl = signal<string | null>(null);
+  readonly formHistoric = signal(false);
   readonly composerSearch = signal('');
   readonly genreSearch = signal('');
 
@@ -97,8 +98,12 @@ export class WorksComponent implements OnInit {
     return work.composers?.some((c) => c.id_composer === myId) ?? false;
   }
 
+  canManageWork(work: Work): boolean {
+    return this.isOwnWork(work) || this.auth.isAdmin();
+  }
+
   canDeleteWork(work: Work): boolean {
-    return this.isOwnWork(work) && (work.interpretation_count ?? 0) === 0;
+    return this.canManageWork(work) && (work.interpretation_count ?? 0) === 0;
   }
 
   async loadWorks(): Promise<void> {
@@ -127,9 +132,10 @@ export class WorksComponent implements OnInit {
     this.genres.set(catalogsRes.data?.genres ?? []);
   }
 
-  async openForm(): Promise<void> {
+  async openForm(historic = false): Promise<void> {
     this.formError.set(null);
     this.editingWork.set(null);
+    this.formHistoric.set(historic);
     this.formName.set('');
     this.formDescription.set('');
     this.formDate.set(new Date().toISOString().slice(0, 10));
@@ -138,7 +144,7 @@ export class WorksComponent implements OnInit {
     this.existingScoreUrl.set(null);
 
     const myId = this.myComposerId();
-    this.selectedComposerIds.set(myId ? [myId] : []);
+    this.selectedComposerIds.set(historic || !myId ? [] : [myId]);
     this.selectedGenreIds.set([]);
     this.composerSearch.set('');
     this.genreSearch.set('');
@@ -152,10 +158,13 @@ export class WorksComponent implements OnInit {
   }
 
   async openEditForm(work: Work): Promise<void> {
-    if (!this.isOwnWork(work)) return;
+    if (!this.canManageWork(work)) return;
 
     this.formError.set(null);
     this.editingWork.set(work);
+    this.formHistoric.set(
+      this.auth.isAdmin() && !(work.composers?.length ?? 0)
+    );
     this.formName.set(work.name);
     this.formDescription.set(work.description ?? '');
     this.formDate.set(this.toDateInputValue(work.write_date));
@@ -178,6 +187,7 @@ export class WorksComponent implements OnInit {
   closeForm(): void {
     this.showForm.set(false);
     this.editingWork.set(null);
+    this.formHistoric.set(false);
     this.formError.set(null);
     this.selectedScoreFile.set(null);
     this.selectedScoreName.set(null);
@@ -213,7 +223,7 @@ export class WorksComponent implements OnInit {
 
   toggleComposer(id: number): void {
     const myId = this.myComposerId();
-    if (id === myId) return;
+    if (!this.formHistoric() && id === myId) return;
 
     const current = this.selectedComposerIds();
     this.selectedComposerIds.set(
@@ -236,6 +246,10 @@ export class WorksComponent implements OnInit {
     formData.append('composerIds', JSON.stringify(this.selectedComposerIds()));
     formData.append('genreIds', JSON.stringify(this.selectedGenreIds()));
 
+    if (this.formHistoric()) {
+      formData.append('mode', 'historic');
+    }
+
     const scoreFile = this.selectedScoreFile();
     if (scoreFile) {
       formData.append('scorePdf', scoreFile);
@@ -254,7 +268,7 @@ export class WorksComponent implements OnInit {
     }
 
     const myId = this.myComposerId();
-    if (!myId) {
+    if (!this.formHistoric() && !myId) {
       this.formError.set('Se requiere el perfil de Compositor.');
       return;
     }

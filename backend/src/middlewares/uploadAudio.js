@@ -47,14 +47,20 @@ export function handleAudioUploadError(err, _req, _res, next) {
   next(err);
 }
 
+function parseOptionalInt(value) {
+  if (value === undefined || value === null || value === '' || value === 'null') {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 export function parseInterpretationPayload(req) {
   const artists = req.body.artists ? JSON.parse(req.body.artists) : [];
 
   return {
     id_work: Number(req.body.id_work),
-    id_type_interpretation: req.body.id_type_interpretation
-      ? Number(req.body.id_type_interpretation)
-      : null,
+    id_type_interpretation: parseOptionalInt(req.body.id_type_interpretation),
     load_file_date: req.body.load_file_date,
     mode: req.body.mode,
     artists,

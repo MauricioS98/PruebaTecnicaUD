@@ -15,6 +15,11 @@
           Nueva interpretación
         </button>
       }
+      @if (auth.isAdmin()) {
+        <button class="oa-btn oa-btn--secondary" type="button" (click)="openForm(true)">
+          Nueva interpretación histórica
+        </button>
+      }
     </div>
   </header>
 
@@ -119,7 +124,7 @@
               <p class="oa-text-muted">Sin intérpretes registrados.</p>
             }
 
-            @if (isOwnInterpretation(item)) {
+            @if (canManageInterpretation(item)) {
               <div class="interp-item__manage">
                 <button
                   type="button"
@@ -156,9 +161,21 @@
     <div class="oa-modal interp-form" role="dialog" (click)="$event.stopPropagation()">
       <header class="interp-form__head">
         <div>
-          <p class="catalog-page__eyebrow">Director</p>
+          <p class="catalog-page__eyebrow">
+            @if (formHistoric()) {
+              Admin · Histórica
+            } @else {
+              Director
+            }
+          </p>
           <h3 class="oa-font-display">
-            {{ isEditing() ? 'Editar interpretación' : 'Registrar interpretación' }}
+            @if (isEditing()) {
+              Editar interpretación
+            } @else if (formHistoric()) {
+              Registrar interpretación histórica
+            } @else {
+              Registrar interpretación
+            }
           </h3>
         </div>
         <button class="oa-btn oa-btn--ghost" type="button" (click)="closeForm()">✕</button>
@@ -182,6 +199,9 @@
 
       <div class="interp-form__field">
         <label class="oa-label" for="interp-type">Tipo de interpretación</label>
+        @if (formHistoric()) {
+          <p class="interp-form__hint oa-text-muted">Opcional. Puedes dejarla sin tipo o elegir uno.</p>
+        }
         <select
           id="interp-type"
           class="oa-input"
@@ -189,10 +209,19 @@
           [ngModel]="formTypeId()"
           (ngModelChange)="formTypeId.set($event)"
         >
-          <option [ngValue]="null">Selecciona un tipo</option>
-          @for (type of types(); track type.id_type_interpretation) {
+          <option [ngValue]="null">
+            @if (formHistoric()) {
+              Sin tipo (histórica)
+            } @else {
+              Selecciona un tipo
+            }
+          </option>
+          @for (type of formTypes(); track type.id_type_interpretation) {
             <option [ngValue]="type.id_type_interpretation">
-              {{ type.name }} ({{ type.min_artist }}-{{ type.max_artist }} artistas)
+              {{ type.name }}
+              @if (type.name !== 'Histórico') {
+                ({{ type.min_artist }}-{{ type.max_artist }} artistas)
+              }
             </option>
           }
         </select>
@@ -212,6 +241,9 @@
 
       <div class="interp-form__field">
         <label class="oa-label" for="interp-audio">Audio (MP3)</label>
+        @if (formHistoric()) {
+          <p class="interp-form__hint oa-text-muted">Opcional para registros históricos.</p>
+        }
         <input
           id="interp-audio"
           class="oa-input"
@@ -232,13 +264,16 @@
       <div class="interp-form__field">
         <div class="interp-form__row-head">
           <span class="oa-label">Artistas</span>
-          @if (selectedType(); as type) {
+          @if (formHistoric()) {
+            <span class="oa-text-muted interp-form__hint">Opcional</span>
+          } @else if (selectedType(); as type) {
             <span class="oa-text-muted interp-form__hint">
               Requiere {{ type.min_artist }}-{{ type.max_artist }} intérpretes
             </span>
           }
           <button class="oa-btn oa-btn--ghost" type="button" (click)="addArtistRow()">+ Añadir</button>
         </div>
+        @if (artistRows().length) {
         <div class="oa-picker">
           <div class="oa-picker__rows">
             @for (row of artistRows(); track $index) {
@@ -285,6 +320,9 @@
             }
           </div>
         </div>
+        } @else if (formHistoric()) {
+          <p class="oa-text-muted interp-form__hint">Sin intérpretes registrados.</p>
+        }
       </div>
 
       @if (formError()) {

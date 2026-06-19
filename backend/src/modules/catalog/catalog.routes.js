@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { authJwt } from '../../middlewares/authJwt.js';
 import { requireWriteAccess } from '../../middlewares/requireWrite.js';
-import { requireComposerProfile } from '../../middlewares/requireComposer.js';
+import { requireComposerOrAdmin } from '../../middlewares/requireComposerOrAdmin.js';
 import { uploadScorePdf, handleUploadError } from '../../middlewares/uploadScore.js';
-import { requireDirectorProfile } from '../../middlewares/requireDirector.js';
+import { requireDirectorOrAdmin } from '../../middlewares/requireDirectorOrAdmin.js';
 import { uploadInterpretationAudio, handleAudioUploadError } from '../../middlewares/uploadAudio.js';
 import * as ctrl from './catalog.controller.js';
 
@@ -16,7 +16,7 @@ router.get('/works/:id', authJwt, ctrl.getWork);
 router.post(
   '/works',
   authJwt,
-  requireComposerProfile,
+  requireComposerOrAdmin,
   uploadScorePdf,
   handleUploadError,
   ctrl.createWork
@@ -24,12 +24,12 @@ router.post(
 router.put(
   '/works/:id',
   authJwt,
-  requireComposerProfile,
+  requireComposerOrAdmin,
   uploadScorePdf,
   handleUploadError,
   ctrl.updateWork
 );
-router.delete('/works/:id', authJwt, requireComposerProfile, ctrl.deleteWork);
+router.delete('/works/:id', authJwt, requireComposerOrAdmin, ctrl.deleteWork);
 
 router.get('/composers', authJwt, ctrl.listComposers);
 router.put('/composers/:id', authJwt, requireWriteAccess, ctrl.updateComposer);
@@ -46,7 +46,7 @@ router.get('/interpretations', authJwt, ctrl.listInterpretations);
 router.post(
   '/interpretations',
   authJwt,
-  requireDirectorProfile,
+  requireDirectorOrAdmin,
   uploadInterpretationAudio,
   handleAudioUploadError,
   ctrl.createInterpretation
@@ -54,11 +54,11 @@ router.post(
 router.put(
   '/interpretations/:id',
   authJwt,
-  requireDirectorProfile,
+  requireDirectorOrAdmin,
   uploadInterpretationAudio,
   handleAudioUploadError,
   ctrl.updateInterpretation
 );
-router.delete('/interpretations/:id', authJwt, requireDirectorProfile, ctrl.deleteInterpretation);
+router.delete('/interpretations/:id', authJwt, requireDirectorOrAdmin, ctrl.deleteInterpretation);
 
 export default router;
