@@ -11,6 +11,7 @@ import { errorHandler } from './middlewares/errorHandler.js';
 import { ensureScoresDir, SCORES_DIR } from './utils/scoreFiles.js';
 import { ensureAudioDir, AUDIO_DIR } from './utils/audioFiles.js';
 import { mountSwagger } from './config/swagger.js';
+import { getDatabaseDiagnostics } from './config/database.js';
 
 ensureScoresDir();
 ensureAudioDir();
@@ -35,7 +36,11 @@ app.use('/uploads/scores', express.static(SCORES_DIR));
 app.use('/uploads/audio', express.static(AUDIO_DIR));
 
 app.get('/api/health', (_req, res) => {
-  res.json({ success: true, message: 'OrchestApp API' });
+  res.json({
+    success: true,
+    message: 'OrchestApp API',
+    database: getDatabaseDiagnostics(),
+  });
 });
 
 app.use('/api/auth', authRoutes);

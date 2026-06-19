@@ -1,5 +1,5 @@
 import app from './app.js';
-import sequelize from './config/database.js';
+import sequelize, { getDatabaseDiagnostics } from './config/database.js';
 import { assertAuthConfig } from './config/auth.js';
 
 const PORT = process.env.PORT || 3000;
@@ -7,6 +7,8 @@ const PORT = process.env.PORT || 3000;
 async function start() {
   try {
     assertAuthConfig();
+    const dbInfo = getDatabaseDiagnostics();
+    console.log('DB config:', JSON.stringify(dbInfo));
     await sequelize.authenticate();
     console.log('Conexión a PostgreSQL establecida');
 
