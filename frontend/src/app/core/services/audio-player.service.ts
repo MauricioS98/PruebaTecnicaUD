@@ -104,7 +104,12 @@ export class AudioPlayerService {
       this.removeFromPlaylist(track.id);
       return;
     }
+
     this.playlist.update((list) => [...list, track]);
+
+    if (this.isOpen() && !this.queue().some((t) => t.id === track.id)) {
+      this.queue.update((list) => [...list, track]);
+    }
   }
 
   isInPlaylist(id: number): boolean {
