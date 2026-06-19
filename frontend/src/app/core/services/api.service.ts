@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { Interpretation, Work } from '../models/api.models';
+import { Artist, Director, Interpretation, Work } from '../models/api.models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -32,10 +32,10 @@ export class ApiService {
   }
 
   getDirectors() {
-    return this.http.get<{ success: boolean; data: unknown[] }>(`${this.base}/directors`);
+    return this.http.get<{ success: boolean; data: Director[] }>(`${this.base}/directors`);
   }
 
   getArtists() {
-    return this.http.get<{ success: boolean; data: unknown[] }>(`${this.base}/artists`);
+    return this.http.get<{ success: boolean; data: Artist[] }>(`${this.base}/artists`);
   }
 }

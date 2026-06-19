@@ -1,0 +1,67 @@
+<div class="catalog-page">
+  <header class="catalog-page__header">
+    <div>
+      <p class="catalog-page__eyebrow">Intérpretes</p>
+      <h2 class="oa-font-display">Artistas</h2>
+    </div>
+    @if (!auth.canWrite()) {
+      <span class="oa-badge oa-badge--neutral">Solo lectura</span>
+    }
+  </header>
+
+  @if (loading()) {
+    <p class="oa-text-muted">Cargando artistas...</p>
+  } @else {
+    <div class="catalog-page__toolbar">
+      <input
+        class="oa-input catalog-page__search"
+        type="search"
+        placeholder="Buscar por nombre o descripción..."
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+      />
+      <span class="catalog-page__count">
+        {{ filteredArtists().length }} de {{ artists().length }} artistas
+      </span>
+    </div>
+
+    @if (filteredArtists().length) {
+      <div class="oa-table-wrap">
+        <table class="oa-table">
+          <thead>
+            <tr>
+              <th>Nombre artístico</th>
+              <th>Descripción</th>
+              <th>Cuenta vinculada</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (artist of filteredArtists(); track artist.id_artist) {
+              <tr>
+                <td><strong>{{ artist.nickname }}</strong></td>
+                <td>
+                  <span class="catalog-page__desc oa-text-secondary">
+                    {{ artist.description || 'Sin descripción' }}
+                  </span>
+                </td>
+                <td>
+                  @if (artist.id_user) {
+                    <span class="oa-badge oa-badge--blue">Usuario registrado</span>
+                  } @else {
+                    <span class="oa-text-muted">Sin vincular</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="catalog-page__empty">No hay artistas que coincidan con tu búsqueda.</p>
+    }
+  }
+
+  @if (error()) {
+    <p class="catalog-page__error">{{ error() }}</p>
+  }
+</div>

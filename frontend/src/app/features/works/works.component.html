@@ -1,0 +1,81 @@
+<div class="catalog-page">
+  <header class="catalog-page__header">
+    <div>
+      <p class="catalog-page__eyebrow">Catálogo</p>
+      <h2 class="oa-font-display">Obras</h2>
+    </div>
+    @if (!auth.canWrite()) {
+      <span class="oa-badge oa-badge--neutral">Solo lectura</span>
+    }
+  </header>
+
+  @if (loading()) {
+    <p class="oa-text-muted">Cargando obras...</p>
+  } @else {
+    <div class="catalog-page__toolbar">
+      <input
+        class="oa-input catalog-page__search"
+        type="search"
+        placeholder="Buscar por obra, compositor o género..."
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+      />
+      <span class="catalog-page__count">
+        {{ filteredWorks().length }} de {{ works().length }} obras
+      </span>
+    </div>
+
+    @if (filteredWorks().length) {
+      <div class="oa-table-wrap">
+        <table class="oa-table">
+          <thead>
+            <tr>
+              <th>Obra</th>
+              <th>Fecha</th>
+              <th>Compositores</th>
+              <th>Géneros</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (work of filteredWorks(); track work.id_work) {
+              <tr>
+                <td><strong>{{ work.name }}</strong></td>
+                <td>{{ work.write_date }}</td>
+                <td>
+                  <div class="catalog-page__badges">
+                    @for (composer of work.composers; track composer.id_composer) {
+                      <span class="oa-badge oa-badge--gold">{{ composer.nickname }}</span>
+                    } @empty {
+                      <span class="oa-text-muted">—</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="catalog-page__badges">
+                    @for (genre of work.genres; track genre.id_genre) {
+                      <span class="oa-badge oa-badge--neutral">{{ genre.name }}</span>
+                    } @empty {
+                      <span class="oa-text-muted">—</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span class="catalog-page__desc oa-text-secondary">
+                    {{ work.description || 'Sin descripción' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="catalog-page__empty">No hay obras que coincidan con tu búsqueda.</p>
+    }
+  }
+
+  @if (error()) {
+    <p class="catalog-page__error">{{ error() }}</p>
+  }
+</div>

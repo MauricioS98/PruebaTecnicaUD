@@ -22,13 +22,41 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
+export interface Composer {
+  id_composer: number;
+  nickname: string;
+  description?: string;
+  id_user?: number | null;
+}
+
+export interface Director {
+  id_director: number;
+  nickname: string;
+  description?: string;
+  id_user?: number | null;
+}
+
+export interface Artist {
+  id_artist: number;
+  nickname: string;
+  description?: string;
+  id_user?: number | null;
+}
+
 export interface Work {
   id_work: number;
   name: string;
   description: string;
   write_date: string;
-  composers?: { id_composer: number; nickname: string }[];
+  composers?: Composer[];
   genres?: { id_genre: number; name: string }[];
+}
+
+export interface InterpretationArtistRow {
+  id_artist: number;
+  id_instrument?: number | null;
+  artist?: { id_artist: number; nickname: string };
+  instrument?: { id_instrument: number; name: string } | null;
 }
 
 export interface Interpretation {
@@ -38,11 +66,12 @@ export interface Interpretation {
   id_type_interpretation?: number | null;
   load_file_date: string;
   work?: { id_work: number; name: string };
-  director?: { id_director: number; nickname: string };
-  type_interpretation?: { name: string; min_artist: number; max_artist: number };
-  interpretation_artists?: Array<{
-    id_artist: number;
-    artist?: { nickname: string };
-    instrument?: { name: string };
-  }>;
+  director?: { id_director: number; nickname: string } | null;
+  type_interpretation?: {
+    id_type_interpretation?: number;
+    name: string;
+    min_artist: number;
+    max_artist: number;
+  } | null;
+  interpretation_artists?: InterpretationArtistRow[];
 }

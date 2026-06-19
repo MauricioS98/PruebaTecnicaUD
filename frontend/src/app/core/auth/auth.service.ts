@@ -34,6 +34,10 @@ export class AuthService {
   readonly isOyente = computed(() => this.userSignal()?.isOyente ?? true);
   readonly canWrite = computed(() => (this.userSignal()?.profiles?.length ?? 0) > 0);
 
+  getHomePath(): string {
+    return this.canWrite() ? '/dashboard' : '/works';
+  }
+
   constructor(
     private readonly http: HttpClient,
     private readonly router: Router
@@ -120,7 +124,7 @@ export class AuthService {
 
   private async completeAuth(data: AuthResponse): Promise<void> {
     this.persistSession(data);
-    await this.router.navigate(['/dashboard']);
+    await this.router.navigateByUrl(this.getHomePath());
   }
 
   private persistSession(data: AuthResponse): void {

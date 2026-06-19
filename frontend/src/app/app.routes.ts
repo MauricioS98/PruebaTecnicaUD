@@ -1,15 +1,14 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/guards/auth.guard';
+import { authGuard, dashboardGuard, guestGuard } from './core/guards/auth.guard';
+import { HomeRedirectComponent } from './core/home-redirect/home-redirect.component';
 import { ShellComponent } from './layout/shell/shell.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { ProfileComponent } from './features/profile/profile.component';
-import {
-  WorksComponent,
-  InterpretationsComponent,
-  ArtistsComponent,
-  DirectorsComponent,
-} from './features/placeholders/placeholders.component';
+import { WorksComponent } from './features/works/works.component';
+import { InterpretationsComponent } from './features/interpretations/interpretations.component';
+import { ArtistsComponent } from './features/artists/artists.component';
+import { DirectorsComponent } from './features/directors/directors.component';
 
 export const routes: Routes = [
   {
@@ -22,8 +21,8 @@ export const routes: Routes = [
     component: ShellComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DashboardComponent },
+      { path: '', pathMatch: 'full', component: HomeRedirectComponent },
+      { path: 'dashboard', component: DashboardComponent, canActivate: [dashboardGuard] },
       { path: 'profile', component: ProfileComponent },
       { path: 'works', component: WorksComponent },
       { path: 'interpretations', component: InterpretationsComponent },
@@ -31,5 +30,5 @@ export const routes: Routes = [
       { path: 'directors', component: DirectorsComponent },
     ],
   },
-  { path: '**', redirectTo: 'dashboard' },
+  { path: '**', redirectTo: '' },
 ];

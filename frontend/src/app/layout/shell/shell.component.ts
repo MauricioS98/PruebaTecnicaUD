@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { BrandLogoComponent } from '../../shared/brand-logo/brand-logo.component';
@@ -13,12 +13,16 @@ import { BrandLogoComponent } from '../../shared/brand-logo/brand-logo.component
 export class ShellComponent {
   readonly auth = inject(AuthService);
 
-  readonly navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '◈' },
-    { path: '/profile', label: 'Mi perfil', icon: '◉' },
-    { path: '/works', label: 'Obras', icon: '♫' },
-    { path: '/interpretations', label: 'Interpretaciones', icon: '◎' },
-    { path: '/artists', label: 'Artistas', icon: '✦' },
-    { path: '/directors', label: 'Directores', icon: '➤' },
+  private readonly allNavItems = [
+    { path: '/dashboard', label: 'Dashboard', icon: '◈', requiresWrite: true },
+    { path: '/profile', label: 'Mi perfil', icon: '◉', requiresWrite: false },
+    { path: '/works', label: 'Obras', icon: '♫', requiresWrite: false },
+    { path: '/interpretations', label: 'Interpretaciones', icon: '◎', requiresWrite: false },
+    { path: '/artists', label: 'Artistas', icon: '✦', requiresWrite: false },
+    { path: '/directors', label: 'Directores', icon: '➤', requiresWrite: false },
   ];
+
+  readonly navItems = computed(() =>
+    this.allNavItems.filter((item) => !item.requiresWrite || this.auth.canWrite())
+  );
 }
