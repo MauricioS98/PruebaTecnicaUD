@@ -1,6 +1,30 @@
 -- PostgreSQL schema: obras, compositores, directores, intérpretes e interpretaciones
+-- Re-ejecutable: la sección de limpieza elimina objetos previos antes de recrearlos.
+-- ADVERTENCIA: al volver a correr este script se pierden todos los datos.
+--
+-- Si ves el error 25P02, ejecuta primero: ROLLBACK;
 
-BEGIN;
+ROLLBACK;
+
+-- ---------------------------------------------------------------------------
+-- Limpieza (idempotente)
+-- ---------------------------------------------------------------------------
+
+DROP SCHEMA IF EXISTS audit CASCADE;
+
+DROP TABLE IF EXISTS interpretation_artist CASCADE;
+DROP TABLE IF EXISTS interpretation CASCADE;
+DROP TABLE IF EXISTS type_interpretation CASCADE;
+DROP TABLE IF EXISTS instrument CASCADE;
+DROP TABLE IF EXISTS type_instrument CASCADE;
+DROP TABLE IF EXISTS composition CASCADE;
+DROP TABLE IF EXISTS work_genre CASCADE;
+DROP TABLE IF EXISTS composer CASCADE;
+DROP TABLE IF EXISTS director CASCADE;
+DROP TABLE IF EXISTS artist CASCADE;
+DROP TABLE IF EXISTS work CASCADE;
+DROP TABLE IF EXISTS genre CASCADE;
+DROP TABLE IF EXISTS user_app CASCADE;
 
 -- ---------------------------------------------------------------------------
 -- Tablas base
@@ -384,54 +408,52 @@ $$;
 
 CREATE TRIGGER trg_audit_user_app
 AFTER INSERT OR UPDATE OR DELETE ON user_app
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('user_app_audit', 'id_user');
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('user_app_audit', 'id_user');
 
 CREATE TRIGGER trg_audit_composer
 AFTER INSERT OR UPDATE OR DELETE ON composer
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('composer_audit', 'id_composer');
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('composer_audit', 'id_composer');
 
 CREATE TRIGGER trg_audit_work
 AFTER INSERT OR UPDATE OR DELETE ON work
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('work_audit', 'id_work');
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('work_audit', 'id_work');
 
 CREATE TRIGGER trg_audit_composition
 AFTER INSERT OR UPDATE OR DELETE ON composition
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('composition_audit', 'id_composition');
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('composition_audit', 'id_composition');
 
 CREATE TRIGGER trg_audit_genre
 AFTER INSERT OR UPDATE OR DELETE ON genre
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('genre_audit', 'id_genre');
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('genre_audit', 'id_genre');
 
 CREATE TRIGGER trg_audit_work_genre
 AFTER INSERT OR UPDATE OR DELETE ON work_genre
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('work_genre_audit', 'id_work_genre');
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('work_genre_audit', 'id_work_genre');
 
 CREATE TRIGGER trg_audit_director
 AFTER INSERT OR UPDATE OR DELETE ON director
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('director_audit', 'id_director');
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('director_audit', 'id_director');
 
 CREATE TRIGGER trg_audit_artist
 AFTER INSERT OR UPDATE OR DELETE ON artist
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('artist_audit', 'id_artist');
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('artist_audit', 'id_artist');
 
 CREATE TRIGGER trg_audit_type_instrument
 AFTER INSERT OR UPDATE OR DELETE ON type_instrument
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('type_instrument_audit', 'id_type_instrument');
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('type_instrument_audit', 'id_type_instrument');
 
 CREATE TRIGGER trg_audit_instrument
 AFTER INSERT OR UPDATE OR DELETE ON instrument
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('instrument_audit', 'id_instrument');
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('instrument_audit', 'id_instrument');
 
 CREATE TRIGGER trg_audit_type_interpretation
 AFTER INSERT OR UPDATE OR DELETE ON type_interpretation
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('type_interpretation_audit', 'id_type_interpretation');
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('type_interpretation_audit', 'id_type_interpretation');
 
 CREATE TRIGGER trg_audit_interpretation
 AFTER INSERT OR UPDATE OR DELETE ON interpretation
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('interpretation_audit', 'id_interpretation');
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('interpretation_audit', 'id_interpretation');
 
 CREATE TRIGGER trg_audit_interpretation_artist
 AFTER INSERT OR UPDATE OR DELETE ON interpretation_artist
-FOR EACH ROW EXECUTE FUNCTION audit.log_change('interpretation_artist_audit', 'id_interpretation_artist');
-
-COMMIT;
+FOR EACH ROW EXECUTE PROCEDURE audit.log_change('interpretation_artist_audit', 'id_interpretation_artist');
