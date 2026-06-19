@@ -23,7 +23,9 @@ export class WorksComponent implements OnInit {
   readonly search = signal('');
 
   readonly showForm = signal(false);
+  readonly editingWork = signal<Work | null>(null);
   readonly saving = signal(false);
+  readonly deletingId = signal<number | null>(null);
   readonly formError = signal<string | null>(null);
 
   readonly formName = signal('');
@@ -33,6 +35,7 @@ export class WorksComponent implements OnInit {
   readonly selectedGenreIds = signal<number[]>([]);
   readonly selectedScoreFile = signal<File | null>(null);
   readonly selectedScoreName = signal<string | null>(null);
+  readonly existingScoreUrl = signal<string | null>(null);
 
   readonly filteredWorks = computed(() => {
     const term = this.search().trim().toLowerCase();
@@ -51,6 +54,7 @@ export class WorksComponent implements OnInit {
   });
 
   readonly myComposerId = computed(() => this.auth.composerProfileId());
+  readonly isEditing = computed(() => !!this.editingWork());
 
   async ngOnInit(): Promise<void> {
     await this.loadWorks();
@@ -59,6 +63,16 @@ export class WorksComponent implements OnInit {
   scoreUrl(work: Work): string | null {
     if (!work.score_pdf_url) return null;
     return `${environment.filesUrl}${work.score_pdf_url}`;
+  }
+
+  isOwnWork(work: Work): boolean {
+    const myId = this.myComposerId();
+    if (!myId) return false;
+    return work.composers?.some((c) => c.id_composer === myId) ?? false;
+  }
+
+  canDeleteWork(work: Work): boolean {
+    return this.isOwnWork(work) && (work.interpretation_count ?? 0) === 0;
   }
 
   async loadWorks(): Promise<void> {
@@ -78,25 +92,53 @@ export class WorksComponent implements OnInit {
     this.search.set(value);
   }
 
+  private async loadFormCatalogs(): Promise<void> {
+    const [composersRes, catalogsRes] = await Promise.all([
+      firstValueFrom(this.api.getComposers()),
+      firstValueFrom(this.api.getCatalogs()),
+    ]);
+    this.composers.set(composersRes.data ?? []);
+    this.genres.set(catalogsRes.data?.genres ?? []);
+  }
+
   async openForm(): Promise<void> {
     this.formError.set(null);
+    this.editingWork.set(null);
     this.formName.set('');
     this.formDescription.set('');
     this.formDate.set(new Date().toISOString().slice(0, 10));
     this.selectedScoreFile.set(null);
     this.selectedScoreName.set(null);
+    this.existingScoreUrl.set(null);
 
     const myId = this.myComposerId();
     this.selectedComposerIds.set(myId ? [myId] : []);
     this.selectedGenreIds.set([]);
 
     try {
-      const [composersRes, catalogsRes] = await Promise.all([
-        firstValueFrom(this.api.getComposers()),
-        firstValueFrom(this.api.getCatalogs()),
-      ]);
-      this.composers.set(composersRes.data ?? []);
-      this.genres.set(catalogsRes.data?.genres ?? []);
+      await this.loadFormCatalogs();
+      this.showForm.set(true);
+    } catch {
+      this.error.set('No se pudieron cargar compositores y géneros.');
+    }
+  }
+
+  async openEditForm(work: Work): Promise<void> {
+    if (!this.isOwnWork(work)) return;
+
+    this.formError.set(null);
+    this.editingWork.set(work);
+    this.formName.set(work.name);
+    this.formDescription.set(work.description ?? '');
+    this.formDate.set(work.write_date);
+    this.selectedScoreFile.set(null);
+    this.selectedScoreName.set(null);
+    this.existingScoreUrl.set(this.scoreUrl(work));
+    this.selectedComposerIds.set(work.composers?.map((c) => c.id_composer) ?? []);
+    this.selectedGenreIds.set(work.genres?.map((g) => g.id_genre) ?? []);
+
+    try {
+      await this.loadFormCatalogs();
       this.showForm.set(true);
     } catch {
       this.error.set('No se pudieron cargar compositores y géneros.');
@@ -105,9 +147,11 @@ export class WorksComponent implements OnInit {
 
   closeForm(): void {
     this.showForm.set(false);
+    this.editingWork.set(null);
     this.formError.set(null);
     this.selectedScoreFile.set(null);
     this.selectedScoreName.set(null);
+    this.existingScoreUrl.set(null);
   }
 
   onScoreSelected(event: Event): void {
@@ -152,6 +196,22 @@ export class WorksComponent implements OnInit {
     );
   }
 
+  private buildFormData(): FormData {
+    const formData = new FormData();
+    formData.append('name', this.formName().trim());
+    formData.append('description', this.formDescription().trim());
+    formData.append('write_date', this.formDate().trim());
+    formData.append('composerIds', JSON.stringify(this.selectedComposerIds()));
+    formData.append('genreIds', JSON.stringify(this.selectedGenreIds()));
+
+    const scoreFile = this.selectedScoreFile();
+    if (scoreFile) {
+      formData.append('scorePdf', scoreFile);
+    }
+
+    return formData;
+  }
+
   async submitWork(): Promise<void> {
     const name = this.formName().trim();
     const write_date = this.formDate().trim();
@@ -170,29 +230,46 @@ export class WorksComponent implements OnInit {
     this.saving.set(true);
     this.formError.set(null);
 
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('description', this.formDescription().trim());
-    formData.append('write_date', write_date);
-    formData.append('composerIds', JSON.stringify(this.selectedComposerIds()));
-    formData.append('genreIds', JSON.stringify(this.selectedGenreIds()));
-
-    const scoreFile = this.selectedScoreFile();
-    if (scoreFile) {
-      formData.append('scorePdf', scoreFile);
-    }
+    const formData = this.buildFormData();
+    const editing = this.editingWork();
 
     try {
-      await firstValueFrom(this.api.createWork(formData));
+      if (editing) {
+        await firstValueFrom(this.api.updateWork(editing.id_work, formData));
+      } else {
+        await firstValueFrom(this.api.createWork(formData));
+      }
       this.closeForm();
       await this.loadWorks();
     } catch (err: unknown) {
       const message =
         (err as { error?: { message?: string } })?.error?.message ??
-        'No se pudo registrar la obra';
+        (editing ? 'No se pudo actualizar la obra' : 'No se pudo registrar la obra');
       this.formError.set(message);
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  async deleteWork(work: Work): Promise<void> {
+    if (!this.canDeleteWork(work)) return;
+
+    const confirmed = confirm(`¿Eliminar la obra "${work.name}"? Esta acción no se puede deshacer.`);
+    if (!confirmed) return;
+
+    this.deletingId.set(work.id_work);
+    this.error.set(null);
+
+    try {
+      await firstValueFrom(this.api.deleteWork(work.id_work));
+      await this.loadWorks();
+    } catch (err: unknown) {
+      const message =
+        (err as { error?: { message?: string } })?.error?.message ??
+        'No se pudo eliminar la obra';
+      this.error.set(message);
+    } finally {
+      this.deletingId.set(null);
     }
   }
 }

@@ -42,6 +42,9 @@
               <th>Géneros</th>
               <th>Partitura</th>
               <th>Descripción</th>
+              @if (auth.isComposer()) {
+                <th>Acciones</th>
+              }
             </tr>
           </thead>
           <tbody>
@@ -81,6 +84,40 @@
                     {{ work.description || 'Sin descripción' }}
                   </span>
                 </td>
+                @if (auth.isComposer()) {
+                  <td>
+                    @if (isOwnWork(work)) {
+                      <div class="works__actions">
+                        <button
+                          class="oa-btn oa-btn--ghost works__action-btn"
+                          type="button"
+                          (click)="openEditForm(work)"
+                        >
+                          Editar
+                        </button>
+                        @if (canDeleteWork(work)) {
+                          <button
+                            class="oa-btn oa-btn--ghost works__action-btn works__action-btn--danger"
+                            type="button"
+                            [disabled]="deletingId() === work.id_work"
+                            (click)="deleteWork(work)"
+                          >
+                            {{ deletingId() === work.id_work ? '...' : 'Eliminar' }}
+                          </button>
+                        } @else {
+                          <span
+                            class="works__blocked oa-text-muted"
+                            title="Tiene interpretaciones registradas"
+                          >
+                            No eliminable
+                          </span>
+                        }
+                      </div>
+                    } @else {
+                      <span class="oa-text-muted">—</span>
+                    }
+                  </td>
+                }
               </tr>
             }
           </tbody>
@@ -102,7 +139,7 @@
       <header class="works-form__head">
         <div>
           <p class="catalog-page__eyebrow">Compositor</p>
-          <h3 class="oa-font-display">Registrar obra</h3>
+          <h3 class="oa-font-display">{{ isEditing() ? 'Editar obra' : 'Registrar obra' }}</h3>
         </div>
         <button class="oa-btn oa-btn--ghost" type="button" (click)="closeForm()">✕</button>
       </header>
@@ -153,6 +190,11 @@
         />
         @if (selectedScoreName()) {
           <p class="works-form__file-name oa-text-muted">{{ selectedScoreName() }}</p>
+        } @else if (existingScoreUrl()) {
+          <p class="works-form__file-name oa-text-muted">
+            Partitura actual:
+            <a [href]="existingScoreUrl()!" target="_blank" rel="noopener">Ver PDF</a>
+          </p>
         }
       </div>
 
@@ -211,7 +253,7 @@
           [disabled]="saving()"
           (click)="submitWork()"
         >
-          {{ saving() ? 'Guardando...' : 'Registrar obra' }}
+          {{ saving() ? 'Guardando...' : (isEditing() ? 'Guardar cambios' : 'Registrar obra') }}
         </button>
       </div>
     </div>

@@ -23,6 +23,16 @@ export class ApiService {
     return this.http.post<{ success: boolean; data: Work }>(`${this.base}/works`, formData);
   }
 
+  updateWork(id: number, formData: FormData) {
+    return this.http.put<{ success: boolean; data: Work }>(`${this.base}/works/${id}`, formData);
+  }
+
+  deleteWork(id: number) {
+    return this.http.delete<{ success: boolean; data: { deleted: boolean } }>(
+      `${this.base}/works/${id}`
+    );
+  }
+
   getInterpretations(params?: { artistId?: number; directorId?: number; workId?: number }) {
     const query = new URLSearchParams();
     if (params?.artistId) query.set('artistId', String(params.artistId));

@@ -29,15 +29,49 @@ const workIncludes = [
   },
 ];
 
+async function getUserComposer(userId, transaction = null) {
+  return Composer.findOne({ where: { id_user: userId }, transaction });
+}
+
+async function assertWorkOwnership(workId, userId, transaction = null) {
+  const userComposer = await getUserComposer(userId, transaction);
+  if (!userComposer) {
+    throw new ApiError(403, 'Se requiere el perfil de Compositor');
+  }
+
+  const link = await Composition.findOne({
+    where: { id_work: workId, id_composer: userComposer.id_composer },
+    transaction,
+  });
+
+  if (!link) {
+    throw new ApiError(403, 'Solo puedes gestionar tus propias obras');
+  }
+
+  return userComposer;
+}
+
 export async function listWorks() {
   return Work.findAll({
     include: workIncludes,
+    attributes: {
+      include: [
+        [
+          sequelize.literal(`(
+            SELECT COUNT(*)::int
+            FROM interpretation i
+            WHERE i.id_work = "work".id_work
+          )`),
+          'interpretation_count',
+        ],
+      ],
+    },
     order: [['name', 'ASC']],
   });
 }
 
-export async function getWorkById(id) {
-  const work = await Work.findByPk(id, { include: workIncludes });
+export async function getWorkById(id, transaction = null) {
+  const work = await Work.findByPk(id, { include: workIncludes, transaction });
   if (!work) throw new ApiError(404, 'Obra no encontrada');
   return work;
 }
@@ -83,13 +117,15 @@ export async function createWork(payload, user) {
       );
     }
 
-    return getWorkById(work.id_work);
+    return getWorkById(work.id_work, transaction);
   });
 }
 
 export async function updateWork(id, payload, user) {
   return sequelize.transaction(async (transaction) => {
     await setAuditUser(user.email, transaction);
+
+    const userComposer = await assertWorkOwnership(id, user.id_user, transaction);
 
     const work = await Work.findByPk(id, { transaction });
     if (!work) throw new ApiError(404, 'Obra no encontrada');
@@ -108,9 +144,12 @@ export async function updateWork(id, payload, user) {
     );
 
     if (payload.composerIds) {
+      const composerIds = [
+        ...new Set([userComposer.id_composer, ...payload.composerIds]),
+      ];
       await Composition.destroy({ where: { id_work: id }, transaction });
       await Composition.bulkCreate(
-        payload.composerIds.map((id_composer) => ({ id_work: id, id_composer })),
+        composerIds.map((id_composer) => ({ id_work: id, id_composer })),
         { transaction }
       );
     }
@@ -131,15 +170,30 @@ export async function updateWork(id, payload, user) {
       await deleteScoreFile(previousPdf);
     }
 
-    return getWorkById(id);
+    return getWorkById(id, transaction);
   });
 }
 
 export async function deleteWork(id, user) {
   return sequelize.transaction(async (transaction) => {
     await setAuditUser(user.email, transaction);
+    await assertWorkOwnership(id, user.id_user, transaction);
+
     const work = await Work.findByPk(id, { transaction });
     if (!work) throw new ApiError(404, 'Obra no encontrada');
+
+    const interpretationsCount = await Interpretation.count({
+      where: { id_work: id },
+      transaction,
+    });
+
+    if (interpretationsCount > 0) {
+      throw new ApiError(
+        409,
+        'No puedes eliminar una obra que tiene interpretaciones registradas'
+      );
+    }
+
     const scorePdfUrl = work.score_pdf_url;
     await work.destroy({ transaction });
     await deleteScoreFile(scorePdfUrl);

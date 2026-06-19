@@ -71,6 +71,7 @@ export interface Work {
   description: string;
   write_date: string;
   score_pdf_url?: string | null;
+  interpretation_count?: number;
   composers?: Composer[];
   genres?: { id_genre: number; name: string }[];
 }

@@ -73,6 +73,32 @@
   font-size: $text-xs;
 }
 
+.works__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2;
+}
+
+.works__action-btn {
+  padding: $space-1 $space-3;
+  font-size: $text-xs;
+
+  &--danger {
+    color: #f0a0a0;
+
+    &:hover:not(:disabled) {
+      color: #ffb8b8;
+      background: rgba(220, 80, 80, 0.1);
+    }
+  }
+}
+
+.works__blocked {
+  font-size: $text-xs;
+  white-space: nowrap;
+}
+
 .works__pdf-link {
   font-size: $text-sm;
   font-weight: $font-weight-medium;
