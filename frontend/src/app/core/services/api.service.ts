@@ -23,6 +23,13 @@ export class ApiService {
     return this.http.post<{ success: boolean; data: Work }>(`${this.base}/works`, formData);
   }
 
+  createInterpretation(formData: FormData) {
+    return this.http.post<{ success: boolean; data: Interpretation }>(
+      `${this.base}/interpretations`,
+      formData
+    );
+  }
+
   updateWork(id: number, formData: FormData) {
     return this.http.put<{ success: boolean; data: Work }>(`${this.base}/works/${id}`, formData);
   }
@@ -56,7 +63,15 @@ export class ApiService {
     return this.http.get<{ success: boolean; data: Director[] }>(`${this.base}/directors`);
   }
 
+  getDirector(id: number) {
+    return this.http.get<{ success: boolean; data: Director }>(`${this.base}/directors/${id}`);
+  }
+
   getArtists() {
     return this.http.get<{ success: boolean; data: Artist[] }>(`${this.base}/artists`);
+  }
+
+  getArtist(id: number) {
+    return this.http.get<{ success: boolean; data: Artist }>(`${this.base}/artists/${id}`);
   }
 }

@@ -81,6 +81,7 @@ export const Interpretation = sequelize.define('interpretation', {
   id_work: { type: DataTypes.INTEGER, allowNull: false },
   id_director: { type: DataTypes.INTEGER, allowNull: true },
   load_file_date: { type: DataTypes.DATEONLY, allowNull: false },
+  audio_mp3_url: { type: DataTypes.STRING(512), allowNull: true },
 });
 
 export const InterpretationArtist = sequelize.define('interpretation_artist', {

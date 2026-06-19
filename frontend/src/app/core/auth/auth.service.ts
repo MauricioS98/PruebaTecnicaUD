@@ -39,6 +39,12 @@ export class AuthService {
   readonly composerProfileId = computed(
     () => this.userSignal()?.profiles?.find((p) => p.type === 'composer')?.id ?? null
   );
+  readonly isDirector = computed(() =>
+    this.userSignal()?.profiles?.some((p) => p.type === 'director') ?? false
+  );
+  readonly directorProfileId = computed(
+    () => this.userSignal()?.profiles?.find((p) => p.type === 'director')?.id ?? null
+  );
 
   getHomePath(): string {
     return this.canWrite() ? '/dashboard' : '/works';

@@ -1,0 +1,84 @@
+<div class="catalog-page performer-profile">
+  <a class="performer-profile__back oa-text-secondary" [routerLink]="backLink()">
+    ← Volver al listado
+  </a>
+
+  @if (loading()) {
+    <p class="oa-text-muted">Cargando perfil...</p>
+  } @else if (performer()) {
+    <header class="catalog-page__header performer-profile__header">
+      <div>
+        <p class="catalog-page__eyebrow">{{ eyebrow() }}</p>
+        <h2 class="oa-font-display">{{ performer()!.nickname }}</h2>
+        <p class="performer-profile__desc oa-text-secondary">
+          {{ performerDescription() }}
+        </p>
+      </div>
+      <span class="oa-badge oa-badge--gold">{{ performerLabel() }}</span>
+    </header>
+
+    <section class="performer-profile__section">
+      <div class="catalog-page__section-head">
+        <h3 class="oa-font-display">Interpretaciones</h3>
+        <span class="catalog-page__count">{{ interpretations().length }} registradas</span>
+      </div>
+
+      @if (interpretations().length) {
+        <div class="interp-grid">
+          @for (item of interpretations(); track item.id_interpretation) {
+            <article class="oa-card interp-item">
+              <div class="interp-item__head">
+                <div>
+                  <h4 class="interp-item__title">{{ item.work?.name ?? 'Obra desconocida' }}</h4>
+                  <p class="interp-item__meta">
+                    @if (type() === 'artist') {
+                      {{ item.director?.nickname ?? 'Director no registrado' }}
+                    } @else {
+                      {{ item.load_file_date }}
+                    }
+                    @if (type() === 'artist') {
+                      · {{ item.load_file_date }}
+                    }
+                  </p>
+                </div>
+                @if (isLegacy(item)) {
+                  <span class="oa-badge oa-badge--neutral">Histórico</span>
+                } @else {
+                  <span class="oa-badge oa-badge--blue">{{ item.type_interpretation?.name }}</span>
+                }
+              </div>
+
+              @if (type() === 'director' && item.interpretation_artists?.length) {
+                <div class="interp-item__artists">
+                  <span class="oa-label">Intérpretes</span>
+                  @for (row of item.interpretation_artists; track row.id_artist) {
+                    <div class="interp-item__artist-row">
+                      <span>{{ row.artist?.nickname ?? 'Artista' }}</span>
+                      <span class="oa-text-muted">{{ row.instrument?.name ?? 'Sin instrumento' }}</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              @if (type() === 'artist' && item.interpretation_artists?.length) {
+                @for (row of item.interpretation_artists; track row.id_artist) {
+                  @if (row.instrument?.name; as instrumentName) {
+                    <p class="oa-text-muted performer-profile__instrument">
+                      Instrumento: {{ instrumentName }}
+                    </p>
+                  }
+                }
+              }
+            </article>
+          }
+        </div>
+      } @else {
+        <p class="catalog-page__empty">Este {{ performerLabel().toLowerCase() }} no tiene interpretaciones registradas.</p>
+      }
+    </section>
+  }
+
+  @if (error()) {
+    <p class="catalog-page__error">{{ error() }}</p>
+  }
+</div>

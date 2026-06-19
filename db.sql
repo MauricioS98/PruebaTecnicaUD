@@ -113,7 +113,8 @@ CREATE TABLE interpretation (
     id_type_interpretation INTEGER REFERENCES type_interpretation (id_type_interpretation) ON DELETE RESTRICT ON UPDATE CASCADE,
     id_work                INTEGER NOT NULL REFERENCES work (id_work) ON DELETE CASCADE ON UPDATE CASCADE,
     id_director            INTEGER REFERENCES director (id_director) ON DELETE RESTRICT ON UPDATE CASCADE,
-    load_file_date         DATE NOT NULL DEFAULT CURRENT_DATE
+    load_file_date         DATE NOT NULL DEFAULT CURRENT_DATE,
+    audio_mp3_url          VARCHAR(512)
 );
 
 CREATE TABLE interpretation_artist (

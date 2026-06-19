@@ -60,9 +60,22 @@ export interface CreateWorkPayload {
 
 export interface CatalogData {
   genres: Genre[];
-  types: unknown[];
-  instruments: unknown[];
-  typeInstruments: unknown[];
+  types: TypeInterpretation[];
+  instruments: CatalogInstrument[];
+  typeInstruments: { id_type_instrument: number; name: string }[];
+}
+
+export interface TypeInterpretation {
+  id_type_interpretation: number;
+  name: string;
+  min_artist: number;
+  max_artist: number;
+}
+
+export interface CatalogInstrument {
+  id_instrument: number;
+  name: string;
+  id_type_instrument: number;
 }
 
 export interface Work {
@@ -89,6 +102,7 @@ export interface Interpretation {
   id_director?: number | null;
   id_type_interpretation?: number | null;
   load_file_date: string;
+  audio_mp3_url?: string | null;
   work?: { id_work: number; name: string };
   director?: { id_director: number; nickname: string } | null;
   type_interpretation?: {

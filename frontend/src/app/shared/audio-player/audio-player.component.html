@@ -1,0 +1,57 @@
+@if (player.hasActivePlayer()) {
+  <footer class="audio-player">
+    <div class="audio-player__track">
+      <strong>{{ player.currentTrack()?.title }}</strong>
+      <span class="oa-text-muted">{{ player.currentTrack()?.subtitle }}</span>
+    </div>
+
+    <div class="audio-player__center">
+      <div class="audio-player__controls">
+        <button
+          type="button"
+          class="audio-player__btn"
+          [class.audio-player__btn--active]="player.shuffle()"
+          (click)="player.toggleShuffle()"
+          title="Aleatorio"
+        >
+          🔀
+        </button>
+        <button type="button" class="audio-player__btn" (click)="player.previous()" title="Anterior">
+          ⏮
+        </button>
+        <button type="button" class="audio-player__btn audio-player__btn--main" (click)="player.togglePlay()">
+          {{ player.isPlaying() ? '⏸' : '▶' }}
+        </button>
+        <button type="button" class="audio-player__btn" (click)="player.next()" title="Siguiente">
+          ⏭
+        </button>
+        <button
+          type="button"
+          class="audio-player__btn"
+          [class.audio-player__btn--active]="player.repeatMode() !== 'off'"
+          (click)="player.cycleRepeat()"
+          title="Repetir"
+        >
+          @if (player.repeatMode() === 'one') {
+            🔂
+          } @else {
+            🔁
+          }
+        </button>
+      </div>
+
+      <div class="audio-player__progress">
+        <span class="audio-player__time">{{ formatTime(player.currentTime()) }}</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="0.1"
+          [value]="player.progress()"
+          (input)="onSeek($event)"
+        />
+        <span class="audio-player__time">{{ formatTime(player.duration()) }}</span>
+      </div>
+    </div>
+  </footer>
+}

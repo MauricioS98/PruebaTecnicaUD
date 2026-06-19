@@ -134,6 +134,10 @@
   flex: 1;
   padding: $space-8;
   overflow-y: auto;
+
+  &--with-player {
+    padding-bottom: calc($space-8 + 96px);
+  }
 }
 
 @media (max-width: 900px) {

@@ -1,4 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/auth/auth.service';
@@ -7,6 +8,7 @@ import { Artist } from '../../core/models/api.models';
 @Component({
   selector: 'app-artists',
   standalone: true,
+  imports: [RouterLink],
   templateUrl: './artists.component.html',
   styleUrl: './artists.component.scss',
 })

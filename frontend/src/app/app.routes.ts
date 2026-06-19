@@ -9,6 +9,7 @@ import { WorksComponent } from './features/works/works.component';
 import { InterpretationsComponent } from './features/interpretations/interpretations.component';
 import { ArtistsComponent } from './features/artists/artists.component';
 import { DirectorsComponent } from './features/directors/directors.component';
+import { PerformerProfileComponent } from './features/performer-profile/performer-profile.component';
 
 export const routes: Routes = [
   {
@@ -27,7 +28,9 @@ export const routes: Routes = [
       { path: 'works', component: WorksComponent },
       { path: 'interpretations', component: InterpretationsComponent },
       { path: 'artists', component: ArtistsComponent },
+      { path: 'artists/:id', component: PerformerProfileComponent, data: { type: 'artist' } },
       { path: 'directors', component: DirectorsComponent },
+      { path: 'directors/:id', component: PerformerProfileComponent, data: { type: 'director' } },
     ],
   },
   { path: '**', redirectTo: '' },

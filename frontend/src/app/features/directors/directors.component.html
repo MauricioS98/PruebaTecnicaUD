@@ -32,7 +32,7 @@
             <tr>
               <th>Nombre artístico</th>
               <th>Descripción</th>
-              <th>Cuenta vinculada</th>
+              <th>Perfil</th>
             </tr>
           </thead>
           <tbody>
@@ -45,11 +45,9 @@
                   </span>
                 </td>
                 <td>
-                  @if (director.id_user) {
-                    <span class="oa-badge oa-badge--blue">Usuario registrado</span>
-                  } @else {
-                    <span class="oa-text-muted">Sin vincular</span>
-                  }
+                  <a class="catalog-page__link" [routerLink]="['/directors', director.id_director]">
+                    Ver perfil
+                  </a>
                 </td>
               </tr>
             }

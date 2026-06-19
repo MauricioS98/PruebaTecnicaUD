@@ -38,8 +38,10 @@
       <button class="oa-btn oa-btn--secondary" (click)="auth.logout()">Salir</button>
     </header>
 
-    <main class="shell__content">
+    <main class="shell__content" [class.shell__content--with-player]="player.hasActivePlayer()">
       <router-outlet />
     </main>
   </div>
+
+  <app-audio-player />
 </div>

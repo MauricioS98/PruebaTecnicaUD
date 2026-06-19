@@ -29,6 +29,8 @@ Thumbs.db
 # Uploads (partituras PDF)
 backend/uploads/scores/*
 !backend/uploads/scores/.gitkeep
+backend/uploads/audio/*
+!backend/uploads/audio/.gitkeep
 
 # Package locks
 package-lock.json

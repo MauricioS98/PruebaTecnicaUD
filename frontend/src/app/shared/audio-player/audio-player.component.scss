@@ -1,0 +1,117 @@
+@use '../../../styles/tokens' as *;
+
+.audio-player {
+  position: fixed;
+  left: $sidebar-width;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 2fr;
+  gap: $space-6;
+  align-items: center;
+  padding: $space-4 $space-8;
+  background: rgba($color-navy-dark, 0.96);
+  border-top: 1px solid $color-border;
+  backdrop-filter: blur(12px);
+}
+
+.audio-player__track {
+  min-width: 0;
+
+  strong {
+    display: block;
+    font-size: $text-sm;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  span {
+    display: block;
+    font-size: $text-xs;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.audio-player__center {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.audio-player__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-3;
+}
+
+.audio-player__btn {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: $radius-full;
+  background: transparent;
+  color: $color-text-secondary;
+  cursor: pointer;
+  font-size: $text-base;
+  transition: all $transition-fast;
+
+  &:hover {
+    color: $color-text-primary;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &--active {
+    color: $color-gold-muted;
+  }
+
+  &--main {
+    width: 44px;
+    height: 44px;
+    background: $color-text-primary;
+    color: $color-black-deep;
+    font-size: $text-lg;
+
+    &:hover {
+      transform: scale(1.04);
+      background: #fff;
+    }
+  }
+}
+
+.audio-player__progress {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: $space-3;
+
+  input[type='range'] {
+    width: 100%;
+    accent-color: $color-gold-muted;
+    cursor: pointer;
+  }
+}
+
+.audio-player__time {
+  font-size: $text-xs;
+  color: $color-text-muted;
+  min-width: 36px;
+}
+
+@media (max-width: 900px) {
+  .audio-player {
+    left: 0;
+    grid-template-columns: 1fr;
+    padding: $space-4;
+  }
+
+  .audio-player__track {
+    display: none;
+  }
+}

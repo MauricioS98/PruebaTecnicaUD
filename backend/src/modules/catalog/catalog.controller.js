@@ -1,5 +1,6 @@
 import * as catalogService from './catalog.service.js';
 import { parseWorkPayload } from '../../middlewares/uploadScore.js';
+import { parseInterpretationPayload } from '../../middlewares/uploadAudio.js';
 
 export async function listWorks(_req, res, next) {
   try {
@@ -73,6 +74,15 @@ export async function listDirectors(_req, res, next) {
   }
 }
 
+export async function getDirector(req, res, next) {
+  try {
+    const data = await catalogService.getDirectorById(req.params.id);
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function updateDirector(req, res, next) {
   try {
     const data = await catalogService.updateDirector(req.params.id, req.body, req.user);
@@ -85,6 +95,15 @@ export async function updateDirector(req, res, next) {
 export async function listArtists(_req, res, next) {
   try {
     const data = await catalogService.listArtists();
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getArtist(req, res, next) {
+  try {
+    const data = await catalogService.getArtistById(req.params.id);
     res.json({ success: true, data });
   } catch (error) {
     next(error);
@@ -124,7 +143,10 @@ export async function listInterpretations(req, res, next) {
 
 export async function createInterpretation(req, res, next) {
   try {
-    const data = await catalogService.createInterpretation(req.body, req.user);
+    const data = await catalogService.createInterpretation(
+      parseInterpretationPayload(req),
+      req.user
+    );
     res.status(201).json({ success: true, data });
   } catch (error) {
     next(error);

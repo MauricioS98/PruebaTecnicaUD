@@ -4,9 +4,18 @@
       <p class="catalog-page__eyebrow">Repertorio</p>
       <h2 class="oa-font-display">Interpretaciones</h2>
     </div>
-    @if (!auth.canWrite()) {
-      <span class="oa-badge oa-badge--neutral">Solo lectura</span>
-    }
+    <div class="interp-page__actions">
+      @if (selectedPlayableCount() > 0) {
+        <button class="oa-btn oa-btn--secondary" type="button" (click)="playSelected()">
+          Reproducir selección ({{ selectedPlayableCount() }})
+        </button>
+      }
+      @if (auth.isDirector()) {
+        <button class="oa-btn oa-btn--primary" type="button" (click)="openForm()">
+          Nueva interpretación
+        </button>
+      }
+    </div>
   </header>
 
   @if (loading()) {
@@ -54,20 +63,46 @@
     @if (filteredInterpretations().length) {
       <div class="interp-grid">
         @for (item of filteredInterpretations(); track item.id_interpretation) {
-          <article class="oa-card interp-item">
+          <article
+            class="oa-card interp-item"
+            [class.interp-item--playing]="player.isCurrentTrack(item.id_interpretation)"
+          >
             <div class="interp-item__head">
-              <div>
-                <h3 class="interp-item__title">{{ item.work?.name ?? 'Obra desconocida' }}</h3>
-                <p class="interp-item__meta">
-                  {{ item.director?.nickname ?? 'Director no registrado' }}
-                  · {{ item.load_file_date }}
-                </p>
+              <div class="interp-item__select">
+                @if (hasAudio(item)) {
+                  <input
+                    type="checkbox"
+                    [checked]="isSelected(item.id_interpretation)"
+                    (change)="toggleSelect(item.id_interpretation)"
+                  />
+                }
+                <div>
+                  <h3 class="interp-item__title">{{ item.work?.name ?? 'Obra desconocida' }}</h3>
+                  <p class="interp-item__meta">
+                    {{ item.director?.nickname ?? 'Director no registrado' }}
+                    · {{ item.load_file_date }}
+                  </p>
+                </div>
               </div>
-              @if (isLegacy(item)) {
-                <span class="oa-badge oa-badge--neutral">Histórico</span>
-              } @else {
-                <span class="oa-badge oa-badge--blue">{{ item.type_interpretation?.name }}</span>
-              }
+              <div class="interp-item__badges">
+                @if (isLegacy(item)) {
+                  <span class="oa-badge oa-badge--neutral">Histórico</span>
+                } @else {
+                  <span class="oa-badge oa-badge--blue">{{ item.type_interpretation?.name }}</span>
+                }
+                @if (hasAudio(item)) {
+                  <button
+                    type="button"
+                    class="interp-item__play"
+                    (click)="playItem(item)"
+                    [title]="isPlayingItem(item) ? 'Pausar' : 'Reproducir'"
+                  >
+                    {{ player.isCurrentTrack(item.id_interpretation) && player.isPlaying() ? '⏸' : '▶' }}
+                  </button>
+                } @else {
+                  <span class="oa-text-muted interp-item__no-audio">Sin audio</span>
+                }
+              </div>
             </div>
 
             @if (item.interpretation_artists?.length) {
@@ -95,3 +130,131 @@
     <p class="catalog-page__error">{{ error() }}</p>
   }
 </div>
+
+@if (showForm()) {
+  <div class="oa-modal-backdrop" (click)="closeForm()">
+    <div class="oa-modal interp-form" role="dialog" (click)="$event.stopPropagation()">
+      <header class="interp-form__head">
+        <div>
+          <p class="catalog-page__eyebrow">Director</p>
+          <h3 class="oa-font-display">Registrar interpretación</h3>
+        </div>
+        <button class="oa-btn oa-btn--ghost" type="button" (click)="closeForm()">✕</button>
+      </header>
+
+      <div class="interp-form__field">
+        <label class="oa-label" for="interp-work">Obra</label>
+        <select
+          id="interp-work"
+          class="oa-input"
+          [value]="formWorkId() ?? ''"
+          (change)="formWorkId.set(+$any($event.target).value || null)"
+        >
+          <option value="">Selecciona una obra</option>
+          @for (work of works(); track work.id_work) {
+            <option [value]="work.id_work">{{ work.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="interp-form__field">
+        <label class="oa-label" for="interp-type">Tipo de interpretación</label>
+        <select
+          id="interp-type"
+          class="oa-input"
+          [value]="formTypeId() ?? ''"
+          (change)="formTypeId.set(+$any($event.target).value || null)"
+        >
+          <option value="">Selecciona un tipo</option>
+          @for (type of types(); track type.id_type_interpretation) {
+            <option [value]="type.id_type_interpretation">
+              {{ type.name }} ({{ type.min_artist }}-{{ type.max_artist }} artistas)
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="interp-form__field">
+        <label class="oa-label" for="interp-date">Fecha de carga</label>
+        <input
+          id="interp-date"
+          class="oa-input"
+          type="date"
+          [value]="formDate()"
+          (input)="formDate.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="interp-form__field">
+        <label class="oa-label" for="interp-audio">Audio (MP3)</label>
+        <input
+          id="interp-audio"
+          class="oa-input"
+          type="file"
+          accept="audio/mpeg,.mp3"
+          (change)="onAudioSelected($event)"
+        />
+        @if (audioFileName()) {
+          <p class="interp-form__hint oa-text-muted">{{ audioFileName() }}</p>
+        }
+      </div>
+
+      <div class="interp-form__field">
+        <div class="interp-form__row-head">
+          <span class="oa-label">Artistas</span>
+          @if (selectedType(); as type) {
+            <span class="oa-text-muted interp-form__hint">
+              Requiere {{ type.min_artist }}-{{ type.max_artist }} intérpretes
+            </span>
+          }
+          <button class="oa-btn oa-btn--ghost" type="button" (click)="addArtistRow()">+ Añadir</button>
+        </div>
+        @for (row of artistRows(); track $index) {
+          <div class="interp-form__artist-row">
+            <select
+              class="oa-input"
+              [value]="row.id_artist"
+              (change)="updateArtistRow($index, 'id_artist', +$any($event.target).value)"
+            >
+              <option value="0">Artista</option>
+              @for (artist of artists(); track artist.id_artist) {
+                <option [value]="artist.id_artist">{{ artist.nickname }}</option>
+              }
+            </select>
+            <select
+              class="oa-input"
+              [value]="row.id_instrument ?? ''"
+              (change)="updateArtistRow($index, 'id_instrument', +$any($event.target).value || null)"
+            >
+              <option value="">Instrumento (opcional)</option>
+              @for (inst of instruments(); track inst.id_instrument) {
+                <option [value]="inst.id_instrument">{{ inst.name }}</option>
+              }
+            </select>
+            @if (artistRows().length > 1) {
+              <button class="oa-btn oa-btn--ghost" type="button" (click)="removeArtistRow($index)">
+                ✕
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      @if (formError()) {
+        <p class="catalog-page__error">{{ formError() }}</p>
+      }
+
+      <div class="interp-form__actions">
+        <button class="oa-btn oa-btn--secondary" type="button" (click)="closeForm()">Cancelar</button>
+        <button
+          class="oa-btn oa-btn--primary"
+          type="button"
+          [disabled]="saving()"
+          (click)="submitInterpretation()"
+        >
+          {{ saving() ? 'Guardando...' : 'Registrar interpretación' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

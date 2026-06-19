@@ -15,6 +15,7 @@ import sequelize, {
 import { setAuditUser } from '../../utils/audit.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { deleteScoreFile } from '../../utils/scoreFiles.js';
+import { deleteAudioFile } from '../../utils/audioFiles.js';
 
 const workIncludes = [
   {
@@ -219,6 +220,12 @@ export async function listDirectors() {
   return Director.findAll({ order: [['nickname', 'ASC']] });
 }
 
+export async function getDirectorById(id) {
+  const director = await Director.findByPk(id);
+  if (!director) throw new ApiError(404, 'Director no encontrado');
+  return director;
+}
+
 export async function updateDirector(id, payload, user) {
   return sequelize.transaction(async (transaction) => {
     await setAuditUser(user.email, transaction);
@@ -231,6 +238,12 @@ export async function updateDirector(id, payload, user) {
 
 export async function listArtists() {
   return Artist.findAll({ order: [['nickname', 'ASC']] });
+}
+
+export async function getArtistById(id) {
+  const artist = await Artist.findByPk(id);
+  if (!artist) throw new ApiError(404, 'Artista no encontrado');
+  return artist;
 }
 
 export async function updateArtist(id, payload, user) {
@@ -302,6 +315,15 @@ function validateInterpretationPayload(payload, type) {
 }
 
 export async function createInterpretation(payload, user) {
+  const userDirector = await Director.findOne({ where: { id_user: user.id_user } });
+  if (!userDirector) {
+    throw new ApiError(403, 'Se requiere el perfil de Director para crear interpretaciones');
+  }
+
+  if (!payload.audio_mp3_url) {
+    throw new ApiError(400, 'Debes adjuntar un archivo MP3 para la interpretación');
+  }
+
   return sequelize.transaction(async (transaction) => {
     await setAuditUser(user.email, transaction);
 
@@ -317,8 +339,9 @@ export async function createInterpretation(payload, user) {
       {
         id_type_interpretation: payload.id_type_interpretation ?? null,
         id_work: payload.id_work,
-        id_director: payload.id_director ?? null,
+        id_director: userDirector.id_director,
         load_file_date: payload.load_file_date ?? new Date().toISOString().slice(0, 10),
+        audio_mp3_url: payload.audio_mp3_url,
       },
       { transaction }
     );
@@ -346,7 +369,9 @@ export async function deleteInterpretation(id, user) {
     await setAuditUser(user.email, transaction);
     const interpretation = await Interpretation.findByPk(id, { transaction });
     if (!interpretation) throw new ApiError(404, 'Interpretación no encontrada');
+    const audioUrl = interpretation.audio_mp3_url;
     await interpretation.destroy({ transaction });
+    await deleteAudioFile(audioUrl);
     return { deleted: true };
   });
 }

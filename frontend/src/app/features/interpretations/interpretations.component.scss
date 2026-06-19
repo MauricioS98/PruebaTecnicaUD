@@ -1,1 +1,112 @@
 @use '../catalog/catalog-page';
+@use '../../../styles/tokens' as *;
+
+.interp-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3;
+}
+
+.interp-item {
+  &--playing {
+    border-color: rgba($color-gold-muted, 0.45);
+    box-shadow: 0 0 0 1px rgba($color-gold-muted, 0.15);
+  }
+
+  &__select {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-3;
+    flex: 1;
+    min-width: 0;
+
+    input[type='checkbox'] {
+      margin-top: $space-1;
+      accent-color: $color-gold-muted;
+    }
+  }
+
+  &__badges {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    flex-shrink: 0;
+  }
+
+  &__play {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: $radius-full;
+    background: $color-gold-soft;
+    color: $color-gold-muted;
+    cursor: pointer;
+    font-size: $text-sm;
+    transition: transform $transition-fast;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  &__no-audio {
+    font-size: $text-xs;
+  }
+}
+
+.interp-form {
+  max-width: 620px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.interp-form__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-6;
+
+  h3 {
+    font-size: $text-2xl;
+    margin-top: $space-1;
+  }
+}
+
+.interp-form__field {
+  margin-bottom: $space-5;
+}
+
+.interp-form__row-head {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  margin-bottom: $space-3;
+  flex-wrap: wrap;
+
+  .oa-label {
+    margin-bottom: 0;
+  }
+}
+
+.interp-form__artist-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: $space-3;
+  margin-bottom: $space-3;
+}
+
+.interp-form__hint {
+  font-size: $text-xs;
+}
+
+.interp-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-3;
+  margin-top: $space-6;
+}
+
+select.oa-input {
+  appearance: auto;
+}

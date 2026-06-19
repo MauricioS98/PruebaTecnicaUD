@@ -1,0 +1,31 @@
+@use '../catalog/catalog-page';
+@use '../../../styles/tokens' as *;
+
+.performer-profile__back {
+  display: inline-block;
+  margin-bottom: $space-6;
+  font-size: $text-sm;
+
+  &:hover {
+    color: $color-text-primary;
+  }
+}
+
+.performer-profile__header {
+  margin-bottom: $space-10;
+}
+
+.performer-profile__desc {
+  margin-top: $space-3;
+  max-width: 52ch;
+  line-height: 1.6;
+}
+
+.performer-profile__section {
+  margin-top: $space-8;
+}
+
+.performer-profile__instrument {
+  margin-top: $space-3;
+  font-size: $text-sm;
+}
