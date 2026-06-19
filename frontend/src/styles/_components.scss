@@ -1,0 +1,352 @@
+@use 'sass:color';
+@use 'tokens' as *;
+
+// ========================
+// RESET Y BASE
+// ========================
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  font-family: $font-ui;
+  font-size: $text-base;
+  font-weight: $font-weight-regular;
+  line-height: 1.6;
+  letter-spacing: $tracking-normal;
+  color: $color-text-primary;
+  background: $color-black-deep;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-display;
+  font-weight: $font-weight-medium;
+  letter-spacing: $tracking-tight;
+  line-height: 1.2;
+  margin: 0;
+}
+
+h1 { font-size: $text-4xl; }
+h2 { font-size: $text-3xl; }
+h3 { font-size: $text-2xl; }
+h4 { font-size: $text-xl; }
+
+p { margin: 0; }
+
+a {
+  color: $color-gold-muted;
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: color.adjust($color-gold-muted, $lightness: 8%);
+  }
+}
+
+// ========================
+// BOTONES
+// ========================
+.oa-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  padding: $space-3 $space-5;
+  font-family: $font-ui;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  letter-spacing: $tracking-wide;
+  border-radius: $radius-md;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all $transition-base;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.oa-btn--primary {
+  background: $color-gold-muted;
+  color: $color-text-inverse;
+  border-color: $color-gold-muted;
+
+  &:hover:not(:disabled) {
+    background: color.adjust($color-gold-muted, $lightness: 6%);
+    box-shadow: $shadow-glow-gold;
+    transform: translateY(-1px);
+  }
+}
+
+.oa-btn--secondary {
+  background: transparent;
+  color: $color-text-primary;
+  border-color: $color-border;
+
+  &:hover:not(:disabled) {
+    border-color: $color-border-hover;
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.oa-btn--ghost {
+  background: transparent;
+  color: $color-text-secondary;
+  border-color: transparent;
+
+  &:hover:not(:disabled) {
+    color: $color-text-primary;
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+// ========================
+// INPUTS
+// ========================
+.oa-input {
+  width: 100%;
+  padding: $space-3 $space-4;
+  font-family: $font-ui;
+  font-size: $text-sm;
+  color: $color-text-primary;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  outline: none;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+
+  &::placeholder {
+    color: $color-text-muted;
+  }
+
+  &:focus {
+    border-color: rgba($color-gold-muted, 0.5);
+    box-shadow: 0 0 0 3px $color-gold-soft;
+  }
+}
+
+.oa-label {
+  display: block;
+  font-size: $text-xs;
+  font-weight: $font-weight-medium;
+  letter-spacing: $tracking-wider;
+  text-transform: uppercase;
+  color: $color-text-muted;
+  margin-bottom: $space-2;
+}
+
+// ========================
+// CARDS
+// ========================
+.oa-card {
+  background: $color-navy-elevated;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $space-6;
+  box-shadow: $shadow-sm;
+  transition: border-color $transition-base, box-shadow $transition-base, transform $transition-base;
+
+  &:hover {
+    border-color: $color-border-hover;
+    box-shadow: $shadow-md;
+  }
+
+  &--interactive:hover {
+    transform: translateY(-2px);
+  }
+
+  &--glass {
+    background: $color-glass;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
+.oa-card__title {
+  font-family: $font-display;
+  font-size: $text-xl;
+  color: $color-text-primary;
+  margin-bottom: $space-2;
+}
+
+.oa-card__subtitle {
+  font-size: $text-sm;
+  color: $color-text-secondary;
+}
+
+// ========================
+// BADGES
+// ========================
+.oa-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $space-1 $space-3;
+  font-size: $text-xs;
+  font-weight: $font-weight-medium;
+  letter-spacing: $tracking-wide;
+  border-radius: $radius-full;
+  text-transform: uppercase;
+}
+
+.oa-badge--gold {
+  background: $color-gold-soft;
+  color: $color-gold-muted;
+  border: 1px solid rgba($color-gold-muted, 0.25);
+}
+
+.oa-badge--blue {
+  background: $color-blue-soft;
+  color: $color-blue-electric;
+  border: 1px solid rgba($color-blue-electric, 0.2);
+}
+
+.oa-badge--neutral {
+  background: rgba(255, 255, 255, 0.06);
+  color: $color-text-secondary;
+  border: 1px solid $color-border;
+}
+
+// ========================
+// TABLA
+// ========================
+.oa-table-wrap {
+  overflow-x: auto;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  background: $color-navy-dark;
+}
+
+.oa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $text-sm;
+
+  th {
+    text-align: left;
+    padding: $space-4 $space-5;
+    font-size: $text-xs;
+    font-weight: $font-weight-semibold;
+    letter-spacing: $tracking-wider;
+    text-transform: uppercase;
+    color: $color-text-muted;
+    border-bottom: 1px solid $color-border;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  td {
+    padding: $space-4 $space-5;
+    color: $color-text-secondary;
+    border-bottom: 1px solid $color-border;
+    transition: background $transition-fast;
+  }
+
+  tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.03);
+    color: $color-text-primary;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+// ========================
+// MODAL
+// ========================
+.oa-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: $color-overlay;
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-6;
+  animation: fadeIn $transition-base forwards;
+}
+
+.oa-modal {
+  width: 100%;
+  max-width: 520px;
+  background: $color-navy-elevated;
+  border: 1px solid $color-border;
+  border-radius: $radius-xl;
+  padding: $space-8;
+  box-shadow: $shadow-lg;
+  animation: slideUp $transition-slow forwards;
+}
+
+// ========================
+// TOOLTIP
+// ========================
+.oa-tooltip {
+  position: relative;
+
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.95);
+    padding: $space-2 $space-3;
+    font-size: $text-xs;
+    color: $color-text-primary;
+    background: $color-graphite;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity $transition-fast, transform $transition-fast;
+  }
+
+  &:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+// ========================
+// ANIMACIONES
+// ========================
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+// ========================
+// UTILIDADES
+// ========================
+.oa-text-muted { color: $color-text-muted; }
+.oa-text-secondary { color: $color-text-secondary; }
+.oa-text-gold { color: $color-gold-muted; }
+.oa-font-display { font-family: $font-display; }

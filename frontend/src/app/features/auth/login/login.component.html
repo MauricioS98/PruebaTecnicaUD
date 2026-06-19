@@ -1,0 +1,74 @@
+<div class="login">
+  <div class="login__bg">
+    <div class="login__staff" aria-hidden="true"></div>
+    <div class="login__gradient" aria-hidden="true"></div>
+  </div>
+
+  <div class="login__panel oa-card oa-card--glass">
+    <div class="login__brand">
+      <app-brand-logo surface="dark" size="lg" align="center" class="login__logo" />
+      <h1>OrchestApp</h1>
+      <p class="login__tagline">Dirección · Armonía · Exclusividad</p>
+    </div>
+
+    <div class="login__tabs" role="tablist">
+      <button
+        type="button"
+        class="login__tab"
+        [class.login__tab--active]="mode() === 'login'"
+        (click)="setMode('login')"
+      >
+        Iniciar sesión
+      </button>
+      <button
+        type="button"
+        class="login__tab"
+        [class.login__tab--active]="mode() === 'register'"
+        (click)="setMode('register')"
+      >
+        Registrarse
+      </button>
+    </div>
+
+    @if (mode() === 'login') {
+      <p class="login__desc oa-text-secondary">
+        Accede con tu cuenta de Google para consultar el repertorio orquestal.
+      </p>
+    } @else {
+      <p class="login__desc oa-text-secondary">
+        Crea tu cuenta con Google. Puedes elegir uno o varios perfiles.
+        Si no seleccionas ninguno, serás <strong>usuario de solo consulta</strong>.
+      </p>
+
+      <div class="login__roles">
+        @for (option of profileOptions; track option.value) {
+          <button
+            type="button"
+            class="login__role"
+            [class.login__role--active]="isProfileSelected(option.value)"
+            (click)="toggleProfile(option.value)"
+          >
+            <span class="login__role-label">{{ option.label }}</span>
+            <span class="login__role-desc">{{ option.description }}</span>
+          </button>
+        }
+      </div>
+    }
+
+    <div id="google-btn" class="login__google"></div>
+
+    @if (error()) {
+      <p class="login__error">{{ error() }}</p>
+    }
+
+    <p class="login__note oa-text-muted">
+      @if (mode() === 'login') {
+        ¿No tienes cuenta?
+        <button type="button" class="login__link" (click)="setMode('register')">Regístrate</button>
+      } @else {
+        ¿Ya tienes cuenta?
+        <button type="button" class="login__link" (click)="setMode('login')">Inicia sesión</button>
+      }
+    </p>
+  </div>
+</div>

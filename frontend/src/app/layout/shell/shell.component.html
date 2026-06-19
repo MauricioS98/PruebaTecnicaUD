@@ -1,0 +1,45 @@
+<div class="shell">
+  <aside class="shell__sidebar">
+    <div class="shell__brand">
+      <app-brand-logo surface="dark" size="sm" />
+      <div>
+        <strong>OrchestApp</strong>
+        <span>Orquesta digital</span>
+      </div>
+    </div>
+
+    <nav class="shell__nav">
+      @for (item of navItems; track item.path) {
+        <a
+          class="shell__nav-item"
+          [routerLink]="item.path"
+          routerLinkActive="shell__nav-item--active"
+        >
+          <span class="shell__nav-icon">{{ item.icon }}</span>
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+
+    <div class="shell__user">
+      <div class="shell__avatar">{{ auth.currentUser()?.name?.charAt(0) }}</div>
+      <div>
+        <strong>{{ auth.currentUser()?.name }}</strong>
+        <span>{{ auth.currentUser()?.profileLabel ?? 'Usuario' }}</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="shell__main">
+    <header class="shell__topbar">
+      <div class="shell__search">
+        <input class="oa-input" type="search" placeholder="Buscar obras, artistas, directores..." />
+      </div>
+      <button class="oa-btn oa-btn--secondary" (click)="auth.logout()">Salir</button>
+    </header>
+
+    <main class="shell__content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

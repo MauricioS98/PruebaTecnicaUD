@@ -1,0 +1,86 @@
+<div class="dashboard">
+  <header class="dashboard__header">
+    <div>
+      <p class="dashboard__eyebrow">Panel administrativo</p>
+      <h2>Bienvenido, {{ auth.currentUser()?.name }}</h2>
+    </div>
+    <button class="oa-btn oa-btn--ghost" (click)="auth.logout()">Cerrar sesión</button>
+  </header>
+
+  @if (loading()) {
+    <p class="oa-text-muted">Cargando repertorio...</p>
+  } @else {
+    <section class="dashboard__stats">
+      <article class="oa-card oa-card--interactive stat">
+        <span class="stat__value">{{ works().length }}</span>
+        <span class="stat__label">Obras</span>
+      </article>
+      <article class="oa-card oa-card--interactive stat">
+        <span class="stat__value">{{ interpretations().length }}</span>
+        <span class="stat__label">Interpretaciones</span>
+      </article>
+      <article class="oa-card oa-card--interactive stat stat--accent">
+        <span class="stat__value">∞</span>
+        <span class="stat__label">Armonía</span>
+      </article>
+    </section>
+
+    <section class="dashboard__grid">
+      <div class="dashboard__section">
+        <div class="dashboard__section-head">
+          <h3>Obras registradas</h3>
+          <span class="oa-badge oa-badge--gold">Catálogo</span>
+        </div>
+        <div class="oa-table-wrap">
+          <table class="oa-table">
+            <thead>
+              <tr>
+                <th>Obra</th>
+                <th>Fecha</th>
+                <th>Compositores</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (work of works(); track work.id_work) {
+                <tr>
+                  <td>
+                    <strong>{{ work.name }}</strong>
+                  </td>
+                  <td>{{ work.write_date }}</td>
+                  <td>
+                    @for (c of work.composers; track c.id_composer) {
+                      <span class="oa-badge oa-badge--neutral">{{ c.nickname }}</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="dashboard__section">
+        <div class="dashboard__section-head">
+          <h3>Interpretaciones recientes</h3>
+          <span class="oa-badge oa-badge--blue">En vivo</span>
+        </div>
+        <div class="interp-list">
+          @for (item of interpretations().slice(0, 6); track item.id_interpretation) {
+            <article class="oa-card interp-card">
+              <div>
+                <h4 class="oa-font-display">{{ item.work?.name }}</h4>
+                <p class="oa-text-secondary">
+                  {{ item.director?.nickname ?? 'Director desconocido' }}
+                  · {{ item.load_file_date }}
+                </p>
+              </div>
+              <span class="oa-badge oa-badge--neutral">
+                {{ item.type_interpretation?.name ?? 'Histórico' }}
+              </span>
+            </article>
+          }
+        </div>
+      </div>
+    </section>
+  }
+</div>

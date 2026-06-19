@@ -1,0 +1,138 @@
+import { Injectable, signal, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { AuthResponse, AuthUser, ProfileType } from '../models/api.models';
+
+export type AuthMode = 'login' | 'register';
+
+interface GoogleSignInOptions {
+  getProfileTypes?: () => ProfileType[];
+  onError?: (message: string) => void;
+}
+
+declare const google: {
+  accounts: {
+    id: {
+      initialize: (config: Record<string, unknown>) => void;
+      renderButton: (element: HTMLElement, config: Record<string, unknown>) => void;
+    };
+  };
+};
+
+const TOKEN_KEY = 'orchestapp_token';
+const USER_KEY = 'orchestapp_user';
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private readonly tokenSignal = signal<string | null>(this.readToken());
+  private readonly userSignal = signal<AuthUser | null>(this.readUser());
+
+  readonly isAuthenticated = computed(() => !!this.tokenSignal());
+  readonly currentUser = computed(() => this.userSignal());
+  readonly token = computed(() => this.tokenSignal());
+  readonly isViewer = computed(() => this.userSignal()?.isViewer ?? true);
+
+  constructor(
+    private readonly http: HttpClient,
+    private readonly router: Router
+  ) {}
+
+  initGoogleSignIn(
+    buttonHost: HTMLElement,
+    mode: AuthMode,
+    options: GoogleSignInOptions = {}
+  ): void {
+    if (typeof google === 'undefined') return;
+
+    buttonHost.innerHTML = '';
+
+    google.accounts.id.initialize({
+      client_id: environment.googleClientId,
+      callback: async (response: { credential: string }) => {
+        try {
+          if (mode === 'register') {
+            const profileTypes = options.getProfileTypes?.() ?? [];
+            await this.handleGoogleRegister(response.credential, profileTypes);
+          } else {
+            await this.handleGoogleLogin(response.credential);
+          }
+        } catch (err: unknown) {
+          const message =
+            (err as { error?: { message?: string } })?.error?.message ??
+            'No se pudo completar la operación con Google';
+          options.onError?.(message);
+        }
+      },
+      auto_select: false,
+    });
+
+    google.accounts.id.renderButton(buttonHost, {
+      type: 'standard',
+      theme: 'filled_black',
+      size: 'large',
+      text: mode === 'register' ? 'signup_with' : 'signin_with',
+      shape: 'pill',
+      width: 280,
+    });
+  }
+
+  private async handleGoogleLogin(idToken: string): Promise<void> {
+    const result = await firstValueFrom(
+      this.http.post<{ success: boolean; data: AuthResponse }>(
+        `${environment.apiUrl}/auth/google`,
+        { idToken }
+      )
+    );
+    await this.completeAuth(result.data);
+  }
+
+  private async handleGoogleRegister(idToken: string, profileTypes: ProfileType[]): Promise<void> {
+    const result = await firstValueFrom(
+      this.http.post<{ success: boolean; data: AuthResponse }>(
+        `${environment.apiUrl}/auth/google/register`,
+        { idToken, profileTypes }
+      )
+    );
+    await this.completeAuth(result.data);
+  }
+
+  async fetchMe(): Promise<AuthUser> {
+    const result = await firstValueFrom(
+      this.http.get<{ success: boolean; data: AuthUser }>(`${environment.apiUrl}/auth/me`)
+    );
+    this.userSignal.set(result.data);
+    sessionStorage.setItem(USER_KEY, JSON.stringify(result.data));
+    return result.data;
+  }
+
+  logout(): void {
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(USER_KEY);
+    this.tokenSignal.set(null);
+    this.userSignal.set(null);
+    this.router.navigate(['/login']);
+  }
+
+  private async completeAuth(data: AuthResponse): Promise<void> {
+    this.persistSession(data);
+    await this.router.navigate(['/dashboard']);
+  }
+
+  private persistSession(data: AuthResponse): void {
+    sessionStorage.setItem(TOKEN_KEY, data.token);
+    sessionStorage.setItem(USER_KEY, JSON.stringify(data.user));
+    this.tokenSignal.set(data.token);
+    this.userSignal.set(data.user);
+  }
+
+  private readToken(): string | null {
+    return sessionStorage.getItem(TOKEN_KEY);
+  }
+
+  private readUser(): AuthUser | null {
+    const raw = sessionStorage.getItem(USER_KEY);
+    return raw ? (JSON.parse(raw) as AuthUser) : null;
+  }
+}
