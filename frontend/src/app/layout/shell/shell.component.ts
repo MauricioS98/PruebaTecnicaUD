@@ -1,5 +1,7 @@
-import { Component, computed, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { AudioPlayerService } from '../../core/services/audio-player.service';
 import { BrandLogoComponent } from '../../shared/brand-logo/brand-logo.component';
@@ -21,8 +23,29 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dial
   styleUrl: './shell.component.scss',
 })
 export class ShellComponent {
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   readonly auth = inject(AuthService);
   readonly player = inject(AudioPlayerService);
+
+  readonly navOpen = signal(false);
+
+  constructor() {
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => this.closeNav());
+  }
+
+  toggleNav(): void {
+    this.navOpen.update((open) => !open);
+  }
+
+  closeNav(): void {
+    this.navOpen.set(false);
+  }
 
   private readonly allNavItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '◈', requiresDashboard: true },

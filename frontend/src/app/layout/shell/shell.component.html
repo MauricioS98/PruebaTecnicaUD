@@ -1,11 +1,30 @@
-<div class="shell">
-  <aside class="shell__sidebar">
-    <div class="shell__brand">
-      <app-brand-logo surface="dark" size="sm" />
-      <div>
-        <strong>OrchestApp</strong>
-        <span>Siente la música</span>
+<div class="shell" [class.shell--nav-open]="navOpen()">
+  @if (navOpen()) {
+    <button
+      class="shell__backdrop"
+      type="button"
+      aria-label="Cerrar menú"
+      (click)="closeNav()"
+    ></button>
+  }
+
+  <aside class="shell__sidebar" [class.shell__sidebar--open]="navOpen()">
+    <div class="shell__sidebar-head">
+      <div class="shell__brand">
+        <app-brand-logo surface="dark" size="sm" />
+        <div>
+          <strong>OrchestApp</strong>
+          <span>Siente la música</span>
+        </div>
       </div>
+      <button
+        class="shell__close-btn oa-btn oa-btn--ghost"
+        type="button"
+        aria-label="Cerrar menú"
+        (click)="closeNav()"
+      >
+        ✕
+      </button>
     </div>
 
     <nav class="shell__nav">
@@ -14,6 +33,7 @@
           class="shell__nav-item"
           [routerLink]="item.path"
           routerLinkActive="shell__nav-item--active"
+          (click)="closeNav()"
         >
           <span class="shell__nav-icon">{{ item.icon }}</span>
           {{ item.label }}
@@ -32,6 +52,24 @@
 
   <div class="shell__main">
     <header class="shell__topbar">
+      <button
+        class="shell__menu-btn oa-btn oa-btn--ghost"
+        type="button"
+        aria-label="Abrir menú"
+        [attr.aria-expanded]="navOpen()"
+        (click)="toggleNav()"
+      >
+        <svg class="shell__menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            d="M4 7h16M4 12h16M4 17h16"
+          />
+        </svg>
+        <span>Menú</span>
+      </button>
       <button class="oa-btn oa-btn--secondary" (click)="auth.logout()">Salir</button>
     </header>
 

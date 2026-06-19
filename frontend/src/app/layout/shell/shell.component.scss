@@ -15,13 +15,29 @@
   border-right: 1px solid $color-border;
 }
 
-.shell__brand {
+.shell__sidebar-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: $space-3;
   margin-bottom: $space-10;
   padding-bottom: $space-6;
   border-bottom: 1px solid $color-border;
+}
+
+.shell__close-btn {
+  display: none;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+.shell__brand {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  min-width: 0;
 
   strong {
     display: block;
@@ -47,6 +63,7 @@
   flex-direction: column;
   gap: $space-2;
   flex: 1;
+  overflow-y: auto;
 }
 
 .shell__nav-item {
@@ -83,6 +100,7 @@
   gap: $space-3;
   padding-top: $space-6;
   border-top: 1px solid $color-border;
+  min-width: 0;
 
   strong {
     display: block;
@@ -105,6 +123,7 @@
   place-items: center;
   font-weight: $font-weight-semibold;
   font-size: $text-sm;
+  flex-shrink: 0;
 }
 
 .shell__main {
@@ -118,11 +137,28 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: $space-6;
+  gap: $space-4;
   padding: 0 $space-8;
   border-bottom: 1px solid $color-border;
   background: rgba($color-navy-dark, 0.6);
   backdrop-filter: blur(12px);
+}
+
+.shell__menu-btn {
+  display: none;
+  align-items: center;
+  gap: $space-2;
+  margin-right: auto;
+  padding-inline: $space-3;
+}
+
+.shell__menu-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.shell__backdrop {
+  display: none;
 }
 
 .shell__content {
@@ -140,7 +176,64 @@
     grid-template-columns: 1fr;
   }
 
+  .shell__menu-btn {
+    display: inline-flex;
+  }
+
+  .shell__topbar {
+    justify-content: flex-end;
+    padding: 0 $space-4;
+  }
+
+  .shell__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    border: none;
+    background: $color-overlay;
+    backdrop-filter: blur(2px);
+    cursor: pointer;
+  }
+
   .shell__sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 120;
+    width: min(288px, 86vw);
+    max-width: 100%;
+    transform: translateX(-105%);
+    transition: transform $transition-fast;
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.35);
+    overflow-y: auto;
+  }
+
+  .shell__sidebar--open {
+    transform: translateX(0);
+  }
+
+  .shell__close-btn {
+    display: grid;
+    place-items: center;
+  }
+
+  .shell--nav-open {
+    overflow: hidden;
+  }
+
+  .shell__content {
+    padding: $space-5;
+
+    &--with-player {
+      padding-bottom: calc($space-5 + 96px);
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .shell__menu-btn span {
     display: none;
   }
 }
